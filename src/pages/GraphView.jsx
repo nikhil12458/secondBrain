@@ -47,7 +47,7 @@ export default function GraphView() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)]">
       <header className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Knowledge Graph</h1>
         <p className="text-zinc-400">Visualize connections between your saved items.</p>

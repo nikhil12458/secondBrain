@@ -78,19 +78,21 @@ export default function Search() {
         <p className="text-zinc-400">Find anything in your brain using natural language.</p>
       </header>
 
-      <form onSubmit={handleSearch} className="relative max-w-2xl">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="What are you looking for?"
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-12 pr-4 py-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 text-lg shadow-sm"
-        />
-        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-zinc-500" />
+      <form onSubmit={handleSearch} className="relative max-w-2xl flex flex-col sm:block gap-2">
+        <div className="relative w-full">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="What are you looking for?"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-12 pr-4 sm:pr-32 py-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 text-lg shadow-sm"
+          />
+          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-zinc-500" />
+        </div>
         <button
           type="submit"
           disabled={isSearching || !query.trim()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-zinc-100 text-zinc-900 px-4 py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="sm:absolute sm:right-2 sm:top-1/2 sm:-translate-y-1/2 w-full sm:w-auto bg-zinc-100 text-zinc-900 px-6 py-3 sm:py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSearching && <Loader2 className="w-4 h-4 animate-spin" />}
           Search

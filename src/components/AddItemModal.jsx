@@ -83,15 +83,15 @@ export default function AddItemModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-zinc-800">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between p-6 border-b border-zinc-800 flex-shrink-0">
           <h2 className="text-xl font-semibold text-zinc-100">Add to Second Brain</h2>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-zinc-400 mb-1">Type</label>
             <select

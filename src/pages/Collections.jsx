@@ -62,14 +62,14 @@ export default function Collections() {
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Collections</h1>
           <p className="text-zinc-400">Organize your knowledge into curated spaces.</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="bg-zinc-100 text-zinc-900 px-4 py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2"
+          className="bg-zinc-100 text-zinc-900 px-4 py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Plus className="w-4 h-4" />
           New Collection

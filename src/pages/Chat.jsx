@@ -97,7 +97,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] max-w-4xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)] max-w-4xl mx-auto">
       <header className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-2">
           <Sparkles className="w-8 h-8 text-indigo-400" />
