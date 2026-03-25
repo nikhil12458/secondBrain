@@ -50,8 +50,9 @@ service cloud.firestore {
     function isValidItem(data) {
       return data.keys().hasAll(['userId', 'type', 'title', 'createdAt']) &&
              data.userId == request.auth.uid &&
-             data.type in ['article', 'video', 'image', 'pdf', 'note'] &&
+             data.type in ['article', 'video', 'image', 'pdf', 'note', 'social'] &&
              data.title is string && data.title.size() <= 500 &&
+             (!('isPublic' in data) || data.isPublic is bool) &&
              data.createdAt is timestamp;
     }
     
@@ -59,6 +60,9 @@ service cloud.firestore {
       return data.keys().hasAll(['userId', 'name', 'createdAt']) &&
              data.userId == request.auth.uid &&
              data.name is string && data.name.size() <= 100 &&
+             (!('description' in data) || data.description is string) &&
+             (!('itemIds' in data) || data.itemIds is list) &&
+             (!('isPublic' in data) || data.isPublic is bool) &&
              data.createdAt is timestamp;
     }
     
@@ -91,14 +95,14 @@ service cloud.firestore {
     }
 
     match /items/{itemId} {
-      allow read: if isDocOwner();
+      allow read: if isDocOwner() || (resource != null && resource.data.isPublic == true);
       allow create: if isAuthenticated() && isValidItem(request.resource.data) && uidUnchanged();
       allow update: if isDocOwner() && isValidItem(request.resource.data) && uidNotModified();
       allow delete: if isDocOwner();
     }
 
     match /collections/{collectionId} {
-      allow read: if isDocOwner();
+      allow read: if isDocOwner() || (resource != null && resource.data.isPublic == true);
       allow create: if isAuthenticated() && isValidCollection(request.resource.data) && uidUnchanged();
       allow update: if isDocOwner() && isValidCollection(request.resource.data) && uidNotModified();
       allow delete: if isDocOwner();

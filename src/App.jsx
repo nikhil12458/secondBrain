@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import GraphView from './pages/GraphView';
 import Search from './pages/Search';
 import Collections from './pages/Collections';
+import PublicCollection from './pages/PublicCollection';
 import Login from './pages/Login';
 import Help from './pages/Help';
 
@@ -22,6 +23,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/c/:collectionId" element={<PublicCollection />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
             <Route path="graph" element={<GraphView />} />

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getItems } from '../services/db';
+import { getItems, getCollections, addItemToCollection } from '../services/db';
 import { format, differenceInDays } from 'date-fns';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2 } from 'lucide-react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -18,16 +18,22 @@ const TypeIcon = ({ type }) => {
 export default function Dashboard() {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [resurfacedItem, setResurfacedItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // State for Add to Collection dropdown
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [addingToCollection, setAddingToCollection] = useState(false);
 
   useEffect(() => {
     if (user) {
-      getItems(user.uid).then((data) => {
-        setItems(data);
+      Promise.all([getItems(user.uid), getCollections(user.uid)]).then(([itemsData, collectionsData]) => {
+        setItems(itemsData);
+        setCollections(collectionsData);
         
-        if (data.length > 0) {
-          const olderItems = data.filter(item => {
+        if (itemsData.length > 0) {
+          const olderItems = itemsData.filter(item => {
             if (!item.createdAt?.toDate) return false;
             const daysOld = differenceInDays(new Date(), item.createdAt.toDate());
             return daysOld > 7;
@@ -36,9 +42,9 @@ export default function Dashboard() {
           if (olderItems.length > 0) {
             const randomIndex = Math.floor(Math.random() * olderItems.length);
             setResurfacedItem(olderItems[randomIndex]);
-          } else if (data.length > 3) {
-            const randomIndex = Math.floor(Math.random() * data.length);
-            setResurfacedItem(data[randomIndex]);
+          } else if (itemsData.length > 3) {
+            const randomIndex = Math.floor(Math.random() * itemsData.length);
+            setResurfacedItem(itemsData[randomIndex]);
           }
         }
         
@@ -46,6 +52,20 @@ export default function Dashboard() {
       });
     }
   }, [user]);
+
+  const handleAddToCollection = async (collectionId, itemId) => {
+    setAddingToCollection(true);
+    try {
+      await addItemToCollection(collectionId, itemId);
+      alert('Added to collection!');
+      setActiveDropdown(null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add to collection');
+    } finally {
+      setAddingToCollection(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading your brain...</div>;
@@ -92,24 +112,58 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold text-zinc-100 mb-4">Recent Additions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((item) => (
-          <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors flex flex-col">
+          <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors flex flex-col relative">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-zinc-950 rounded-lg">
                   <TypeIcon type={item.type} />
                 </div>
                 <div>
-                  <h3 className="font-medium text-zinc-100 line-clamp-1">{item.title}</h3>
+                  <h3 className="font-medium text-zinc-100 line-clamp-1" title={item.title}>{item.title}</h3>
                   <p className="text-xs text-zinc-500">
                     {item.createdAt?.toDate ? format(item.createdAt.toDate(), 'MMM d, yyyy') : 'Recently'}
                   </p>
                 </div>
               </div>
-              {item.url && (
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-zinc-300">
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              )}
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button 
+                    onClick={() => setActiveDropdown(activeDropdown === item.id ? null : item.id)}
+                    className="text-zinc-500 hover:text-zinc-300 p-1"
+                    title="Add to Collection"
+                  >
+                    <FolderPlus className="w-4 h-4" />
+                  </button>
+                  {activeDropdown === item.id && (
+                    <div className="absolute right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-20 py-1">
+                      <div className="px-3 py-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-700">
+                        Add to Collection
+                      </div>
+                      {collections.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-zinc-500">No collections yet</div>
+                      ) : (
+                        <div className="max-h-48 overflow-y-auto">
+                          {collections.map(c => (
+                            <button
+                              key={c.id}
+                              onClick={() => handleAddToCollection(c.id, item.id)}
+                              disabled={addingToCollection}
+                              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors truncate"
+                            >
+                              {c.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {item.url && (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-zinc-300 p-1">
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
             </div>
             
             <p className="text-sm text-zinc-400 line-clamp-3 mb-4 flex-1">

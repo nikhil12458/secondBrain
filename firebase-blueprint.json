@@ -19,7 +19,7 @@
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
-        "type": { "type": "string", "enum": ["article", "video", "image", "pdf", "note"] },
+        "type": { "type": "string", "enum": ["article", "video", "image", "pdf", "note", "social"] },
         "title": { "type": "string" },
         "content": { "type": "string", "description": "Text content or description." },
         "url": { "type": "string" },
