@@ -185,6 +185,12 @@ export default function Dashboard() {
               </div>
             </div>
             
+            {item.type === 'image' && item.url && (
+              <div className="mb-4 rounded-lg overflow-hidden bg-zinc-950 h-32 flex items-center justify-center">
+                <img src={item.url} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+            )}
+
             <p className="text-sm text-zinc-400 line-clamp-3 mb-4 flex-1">
               {item.summary || item.content}
             </p>

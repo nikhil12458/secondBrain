@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { saveItem } from '../services/db';
-import { X, Loader2, Link as LinkIcon } from 'lucide-react';
+import { saveItem, uploadImage } from '../services/db';
+import { X, Loader2, Link as LinkIcon, Upload } from 'lucide-react';
 
 export default function AddItemModal({ onClose }) {
   const { user } = useAuth();
@@ -9,8 +9,10 @@ export default function AddItemModal({ onClose }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [url, setUrl] = useState('');
+  const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingMeta, setFetchingMeta] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleAutoFill = async () => {
     if (!url) return;
@@ -42,17 +44,33 @@ export default function AddItemModal({ onClose }) {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      if (!title) {
+        setTitle(file.name.split('.')[0]);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
     
     setLoading(true);
     try {
+      let finalUrl = url;
+      
+      if (type === 'image' && imageFile) {
+        finalUrl = await uploadImage(imageFile, user.uid);
+      }
+
       await saveItem(user.uid, {
         type,
         title,
         content,
-        url: url || undefined,
+        url: finalUrl || undefined,
       });
       onClose();
     } catch (error) {
@@ -75,6 +93,50 @@ export default function AddItemModal({ onClose }) {
         
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-1">Type</label>
+            <select
+              value={type}
+              onChange={(e) => {
+                setType(e.target.value);
+                if (e.target.value !== 'image') {
+                  setImageFile(null);
+                }
+              }}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+            >
+              <option value="note">Note</option>
+              <option value="article">Article</option>
+              <option value="video">Video</option>
+              <option value="social">Social Media</option>
+              <option value="image">Image</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </div>
+
+          {type === 'image' ? (
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Upload Image</label>
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-zinc-700 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors bg-zinc-950"
+              >
+                <Upload className="w-8 h-8 text-zinc-500 mb-2" />
+                <span className="text-zinc-400 text-sm">
+                  {imageFile ? imageFile.name : 'Click to select an image from your device'}
+                </span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+              </div>
+              <div className="mt-2 text-center text-zinc-500 text-xs">Or provide an image URL below</div>
+            </div>
+          ) : null}
+
+          <div>
             <label className="block text-sm font-medium text-zinc-400 mb-1">URL (Optional)</label>
             <div className="flex gap-2">
               <input
@@ -87,29 +149,13 @@ export default function AddItemModal({ onClose }) {
               <button
                 type="button"
                 onClick={handleAutoFill}
-                disabled={!url || fetchingMeta}
+                disabled={!url || fetchingMeta || type === 'image'}
                 className="bg-zinc-800 text-zinc-100 px-4 py-2 rounded-lg font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {fetchingMeta ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
                 Auto-fill
               </button>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">Type</label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-            >
-              <option value="note">Note</option>
-              <option value="article">Article</option>
-              <option value="video">Video</option>
-              <option value="social">Social Media</option>
-              <option value="image">Image</option>
-              <option value="pdf">PDF</option>
-            </select>
           </div>
 
           <div>

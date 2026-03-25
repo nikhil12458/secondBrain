@@ -5,6 +5,7 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import GraphView from './pages/GraphView';
 import Search from './pages/Search';
+import Chat from './pages/Chat';
 import Collections from './pages/Collections';
 import PublicCollection from './pages/PublicCollection';
 import Login from './pages/Login';
@@ -28,6 +29,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="graph" element={<GraphView />} />
             <Route path="search" element={<Search />} />
+            <Route path="chat" element={<Chat />} />
             <Route path="collections" element={<Collections />} />
             <Route path="help" element={<Help />} />
           </Route>
