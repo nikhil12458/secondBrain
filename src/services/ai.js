@@ -1,4 +1,4 @@
-const MISTRAL_API_KEY = "Yt8SYqq7iJMQR2aQhdRWfeUHfcm3Sndc";
+const MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY || "Yt8SYqq7iJMQR2aQhdRWfeUHfcm3Sndc";
 
 export async function generateTagsAndSummary(content, type, title) {
   try {
