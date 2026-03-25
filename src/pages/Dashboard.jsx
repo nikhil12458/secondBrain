@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getItems, getCollections, addItemToCollection } from '../services/db';
+import { subscribeToItems, subscribeToCollections, addItemToCollection } from '../services/db';
 import { format, differenceInDays } from 'date-fns';
 import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2 } from 'lucide-react';
 
@@ -27,30 +27,49 @@ export default function Dashboard() {
   const [addingToCollection, setAddingToCollection] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      Promise.all([getItems(user.uid), getCollections(user.uid)]).then(([itemsData, collectionsData]) => {
-        setItems(itemsData);
-        setCollections(collectionsData);
-        
-        if (itemsData.length > 0) {
-          const olderItems = itemsData.filter(item => {
-            if (!item.createdAt?.toDate) return false;
-            const daysOld = differenceInDays(new Date(), item.createdAt.toDate());
-            return daysOld > 7;
-          });
-          
-          if (olderItems.length > 0) {
-            const randomIndex = Math.floor(Math.random() * olderItems.length);
-            setResurfacedItem(olderItems[randomIndex]);
-          } else if (itemsData.length > 3) {
-            const randomIndex = Math.floor(Math.random() * itemsData.length);
-            setResurfacedItem(itemsData[randomIndex]);
-          }
-        }
-        
+    if (!user) return;
+
+    let itemsLoaded = false;
+    let collectionsLoaded = false;
+
+    const checkLoading = () => {
+      if (itemsLoaded && collectionsLoaded) {
         setLoading(false);
-      });
-    }
+      }
+    };
+
+    const unsubItems = subscribeToItems(user.uid, (itemsData) => {
+      setItems(itemsData);
+      itemsLoaded = true;
+      
+      if (itemsData.length > 0) {
+        const olderItems = itemsData.filter(item => {
+          if (!item.createdAt?.toDate) return false;
+          const daysOld = differenceInDays(new Date(), item.createdAt.toDate());
+          return daysOld > 7;
+        });
+        
+        if (olderItems.length > 0) {
+          const randomIndex = Math.floor(Math.random() * olderItems.length);
+          setResurfacedItem(olderItems[randomIndex]);
+        } else if (itemsData.length > 3) {
+          const randomIndex = Math.floor(Math.random() * itemsData.length);
+          setResurfacedItem(itemsData[randomIndex]);
+        }
+      }
+      checkLoading();
+    });
+
+    const unsubCollections = subscribeToCollections(user.uid, (collectionsData) => {
+      setCollections(collectionsData);
+      collectionsLoaded = true;
+      checkLoading();
+    });
+
+    return () => {
+      unsubItems();
+      unsubCollections();
+    };
   }, [user]);
 
   const handleAddToCollection = async (collectionId, itemId) => {

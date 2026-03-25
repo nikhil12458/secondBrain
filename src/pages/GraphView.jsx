@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getGraphData } from '../services/db';
+import { subscribeToGraphData } from '../services/db';
 import ForceGraph2D from 'react-force-graph-2d';
 
 export default function GraphView() {
@@ -10,9 +10,13 @@ export default function GraphView() {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    if (user) {
-      getGraphData(user.uid).then(setGraphData);
-    }
+    if (!user) return;
+    
+    const unsub = subscribeToGraphData(user.uid, (data) => {
+      setGraphData(data);
+    });
+
+    return () => unsub();
   }, [user]);
 
   useEffect(() => {

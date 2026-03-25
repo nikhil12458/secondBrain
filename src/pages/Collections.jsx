@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getCollections, createCollection, toggleCollectionPublic } from '../services/db';
+import { subscribeToCollections, createCollection, toggleCollectionPublic } from '../services/db';
 import { Plus, Globe, Lock, Loader2, Copy } from 'lucide-react';
 
 export default function Collections() {
@@ -13,21 +13,15 @@ export default function Collections() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadCollections();
-    }
-  }, [user]);
-
-  const loadCollections = async () => {
-    try {
-      const data = await getCollections(user.uid);
+    if (!user) return;
+    
+    const unsub = subscribeToCollections(user.uid, (data) => {
       setCollections(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
       setLoading(false);
-    }
-  };
+    });
+
+    return () => unsub();
+  }, [user]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -39,7 +33,6 @@ export default function Collections() {
       setNewName('');
       setNewDesc('');
       setShowAdd(false);
-      await loadCollections();
     } catch (err) {
       console.error(err);
       alert('Failed to create collection');
@@ -51,7 +44,6 @@ export default function Collections() {
   const handleTogglePublic = async (collection) => {
     try {
       await toggleCollectionPublic(collection.id, !collection.isPublic);
-      await loadCollections();
     } catch (err) {
       console.error(err);
       alert('Failed to update collection visibility');

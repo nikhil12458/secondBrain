@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getItems } from '../services/db';
+import { subscribeToItems } from '../services/db';
 import { generateEmbeddings } from '../services/ai';
 import { Search as SearchIcon, Loader2 } from 'lucide-react';
 
@@ -25,9 +25,13 @@ export default function Search() {
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      getItems(user.uid).then(setItems);
-    }
+    if (!user) return;
+    
+    const unsub = subscribeToItems(user.uid, (data) => {
+      setItems(data);
+    });
+
+    return () => unsub();
   }, [user]);
 
   const handleSearch = async (e) => {

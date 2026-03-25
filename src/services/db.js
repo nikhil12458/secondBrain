@@ -1,6 +1,60 @@
 import { db } from '../lib/firebase';
-import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp, doc, updateDoc, getDoc, writeBatch, documentId } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp, doc, updateDoc, getDoc, writeBatch, documentId, onSnapshot } from 'firebase/firestore';
 import { generateTagsAndSummary, generateEmbeddings } from './ai';
+
+export function subscribeToItems(userId, callback) {
+  const q = query(collection(db, 'items'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(items);
+  }, (error) => {
+    console.error("Error subscribing to items:", error);
+  });
+}
+
+export function subscribeToCollections(userId, callback) {
+  const q = query(collection(db, 'collections'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const collections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(collections);
+  }, (error) => {
+    console.error("Error subscribing to collections:", error);
+  });
+}
+
+export function subscribeToGraphData(userId, callback) {
+  const itemsQ = query(collection(db, 'items'), where('userId', '==', userId));
+  const relationsQ = query(collection(db, 'relations'), where('userId', '==', userId));
+  
+  let items = [];
+  let relations = [];
+  let itemsLoaded = false;
+  let relationsLoaded = false;
+  
+  const updateGraph = () => {
+    if (!itemsLoaded || !relationsLoaded) return;
+    const nodes = items.map(item => ({ id: item.id, name: item.title, val: 1, group: item.type }));
+    const links = relations.map(rel => ({ source: rel.sourceItemId, target: rel.targetItemId }));
+    callback({ nodes, links });
+  };
+
+  const unsubItems = onSnapshot(itemsQ, (snapshot) => {
+    items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    itemsLoaded = true;
+    updateGraph();
+  });
+
+  const unsubRelations = onSnapshot(relationsQ, (snapshot) => {
+    relations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    relationsLoaded = true;
+    updateGraph();
+  });
+
+  return () => {
+    unsubItems();
+    unsubRelations();
+  };
+}
 
 export async function saveItem(userId, data) {
   const aiData = await generateTagsAndSummary(data.content || '', data.type || 'note', data.title || '');
