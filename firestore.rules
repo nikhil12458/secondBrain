@@ -97,8 +97,15 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || request.resource.data.role == 'user' || isAdmin());
-      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) && (!('permissions' in request.resource.data) || request.resource.data.permissions == resource.data.permissions)) || (isAdmin() && isValidUser(request.resource.data));
-      allow delete: if isOwner(userId) || isAdmin();
+      allow update: if isValidUser(request.resource.data) && (
+        (request.auth.token.email == "ektak144@gmail.com" && request.auth.token.email_verified == true) ||
+        (isAdmin() && !isOwner(userId)) ||
+        (isOwner(userId) && 
+         (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) && 
+         (!('permissions' in request.resource.data) || request.resource.data.permissions == resource.data.permissions) &&
+         (!('disabledFeatures' in request.resource.data) || request.resource.data.disabledFeatures == resource.data.disabledFeatures))
+      );
+      allow delete: if (isAdmin() && !isOwner(userId)) || (request.auth.token.email == "ektak144@gmail.com" && request.auth.token.email_verified == true);
     }
 
     match /items/{itemId} {

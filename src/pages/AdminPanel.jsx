@@ -202,8 +202,8 @@ const AdminPanel = () => {
                       <select
                         value={u.role || 'user'}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        disabled={u.email === 'ektak144@gmail.com'}
-                        className="mb-3 block w-full pl-3 pr-10 py-2 text-base bg-zinc-800 border-zinc-700 text-zinc-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                        disabled={u.email === 'ektak144@gmail.com' || (u.id === userDetails.uid && userDetails.email !== 'ektak144@gmail.com')}
+                        className="mb-3 block w-full pl-3 pr-10 py-2 text-base bg-zinc-800 border-zinc-700 text-zinc-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
@@ -220,8 +220,8 @@ const AdminPanel = () => {
                                   type="checkbox"
                                   checked={hasPermission}
                                   onChange={() => handleUserPermissionToggle(u.id, permission)}
-                                  disabled={u.email === 'ektak144@gmail.com'}
-                                  className="rounded border-zinc-700 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 h-3 w-3"
+                                  disabled={u.email === 'ektak144@gmail.com' || (u.id === userDetails.uid && userDetails.email !== 'ektak144@gmail.com')}
+                                  className="rounded border-zinc-700 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 h-3 w-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 {permission.replace('_', ' ')}
                               </label>
@@ -240,7 +240,8 @@ const AdminPanel = () => {
                                 type="checkbox"
                                 checked={!isDisabled}
                                 onChange={() => handleUserFeatureToggle(u.id, feature)}
-                                className="rounded border-zinc-700 bg-zinc-800 text-indigo-500 focus:ring-indigo-500"
+                                disabled={u.email === 'ektak144@gmail.com' || (u.id === userDetails.uid && userDetails.email !== 'ektak144@gmail.com')}
+                                className="rounded border-zinc-700 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                               {feature}
                             </label>
@@ -251,7 +252,7 @@ const AdminPanel = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleDeleteUser(u.id)}
-                        disabled={u.email === 'ektak144@gmail.com'}
+                        disabled={u.email === 'ektak144@gmail.com' || (u.id === userDetails.uid && userDetails.email !== 'ektak144@gmail.com')}
                         className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed p-2 rounded-md hover:bg-zinc-800 transition-colors"
                         title="Delete User Record"
                       >
