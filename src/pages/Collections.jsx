@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatures } from '../hooks/useFeatures';
 import { subscribeToCollections, createCollection, toggleCollectionPublic } from '../services/db';
 import { Plus, Globe, Lock, Loader2, Copy } from 'lucide-react';
 
 export default function Collections() {
   const { user } = useAuth();
+  const { isFeatureEnabled } = useFeatures();
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -59,6 +61,8 @@ export default function Collections() {
   if (loading) {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-zinc-500" /></div>;
   }
+
+  const canMakePublic = isFeatureEnabled('publicCollections');
 
   return (
     <div className="space-y-8">
@@ -132,13 +136,15 @@ export default function Collections() {
                   )}
                 </h3>
               </div>
-              <button
-                onClick={() => handleTogglePublic(collection)}
-                className={`p-2 rounded-lg transition-colors ${collection.isPublic ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
-                title={collection.isPublic ? "Make Private" : "Publish"}
-              >
-                {collection.isPublic ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-              </button>
+              {canMakePublic && (
+                <button
+                  onClick={() => handleTogglePublic(collection)}
+                  className={`p-2 rounded-lg transition-colors ${collection.isPublic ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+                  title={collection.isPublic ? "Make Private" : "Publish"}
+                >
+                  {collection.isPublic ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                </button>
+              )}
             </div>
             <p className="text-zinc-400 text-sm mb-6 flex-1">
               {collection.description || 'No description'}
@@ -147,7 +153,7 @@ export default function Collections() {
               <span className="text-sm text-zinc-500">
                 {collection.itemIds?.length || 0} items
               </span>
-              {collection.isPublic && (
+              {collection.isPublic && canMakePublic && (
                 <button
                   onClick={() => copyLink(collection.id)}
                   className="text-sm text-zinc-400 hover:text-zinc-100 flex items-center gap-1"

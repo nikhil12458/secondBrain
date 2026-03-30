@@ -10,6 +10,15 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    function isAdmin() {
+      return isAuthenticated() &&
+        (
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email == "ektak144@gmail.com" && request.auth.token.email_verified == true)
+        );
+    }
+    
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -42,15 +51,16 @@ service cloud.firestore {
     
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
-             data.uid == request.auth.uid &&
              data.email is string &&
-             data.createdAt is timestamp;
+             data.createdAt is timestamp &&
+             (!('role' in data) || data.role in ['admin', 'user']) &&
+             (!('permissions' in data) || data.permissions is list) &&
+             (!('disabledFeatures' in data) || data.disabledFeatures is list);
     }
     
     function isValidItem(data) {
       return data.keys().hasAll(['userId', 'type', 'title', 'createdAt']) &&
-             data.userId == request.auth.uid &&
-             data.type in ['article', 'video', 'image', 'pdf', 'note', 'social'] &&
+             data.type in ['article', 'video', 'image', 'pdf', 'note', 'social', 'journal'] &&
              data.title is string && data.title.size() <= 500 &&
              (!('isPublic' in data) || data.isPublic is bool) &&
              data.createdAt is timestamp;
@@ -58,7 +68,6 @@ service cloud.firestore {
     
     function isValidCollection(data) {
       return data.keys().hasAll(['userId', 'name', 'createdAt']) &&
-             data.userId == request.auth.uid &&
              data.name is string && data.name.size() <= 100 &&
              (!('description' in data) || data.description is string) &&
              (!('itemIds' in data) || data.itemIds is list) &&
@@ -68,7 +77,6 @@ service cloud.firestore {
     
     function isValidRelation(data) {
       return data.keys().hasAll(['userId', 'sourceItemId', 'targetItemId', 'type', 'createdAt']) &&
-             data.userId == request.auth.uid &&
              data.sourceItemId is string &&
              data.targetItemId is string &&
              data.type in ['similar', 'reference'] &&
@@ -77,7 +85,6 @@ service cloud.firestore {
     
     function isValidHighlight(data) {
       return data.keys().hasAll(['userId', 'itemId', 'text', 'createdAt']) &&
-             data.userId == request.auth.uid &&
              data.itemId is string &&
              data.text is string && data.text.size() <= 10000 &&
              data.createdAt is timestamp;
@@ -88,38 +95,49 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged();
-      allow update: if isOwner(userId) && isValidUser(request.resource.data) && uidNotModified();
-      allow delete: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || request.resource.data.role == 'user' || isAdmin());
+      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) && (!('permissions' in request.resource.data) || request.resource.data.permissions == resource.data.permissions)) || (isAdmin() && isValidUser(request.resource.data));
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     match /items/{itemId} {
-      allow read: if isDocOwner() || (resource != null && resource.data.isPublic == true);
+      allow read: if isDocOwner() || (resource != null && resource.data.isPublic == true) || isAdmin();
       allow create: if isAuthenticated() && isValidItem(request.resource.data) && uidUnchanged();
-      allow update: if isDocOwner() && isValidItem(request.resource.data) && uidNotModified();
-      allow delete: if isDocOwner();
+      allow update: if (isDocOwner() || isAdmin()) && isValidItem(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner() || isAdmin();
     }
 
     match /collections/{collectionId} {
-      allow read: if isDocOwner() || (resource != null && resource.data.isPublic == true);
+      allow read: if isDocOwner() || (resource != null && resource.data.isPublic == true) || isAdmin();
       allow create: if isAuthenticated() && isValidCollection(request.resource.data) && uidUnchanged();
-      allow update: if isDocOwner() && isValidCollection(request.resource.data) && uidNotModified();
-      allow delete: if isDocOwner();
+      allow update: if (isDocOwner() || isAdmin()) && isValidCollection(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner() || isAdmin();
     }
 
     match /relations/{relationId} {
-      allow read: if isDocOwner();
+      allow read: if isDocOwner() || isAdmin();
       allow create: if isAuthenticated() && isValidRelation(request.resource.data) && uidUnchanged();
-      allow update: if isDocOwner() && isValidRelation(request.resource.data) && uidNotModified();
-      allow delete: if isDocOwner();
+      allow update: if (isDocOwner() || isAdmin()) && isValidRelation(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner() || isAdmin();
     }
 
     match /highlights/{highlightId} {
-      allow read: if isDocOwner();
+      allow read: if isDocOwner() || isAdmin();
       allow create: if isAuthenticated() && isValidHighlight(request.resource.data) && uidUnchanged();
-      allow update: if isDocOwner() && isValidHighlight(request.resource.data) && uidNotModified();
-      allow delete: if isDocOwner();
+      allow update: if (isDocOwner() || isAdmin()) && isValidHighlight(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner() || isAdmin();
+    }
+    
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /analytics/{docId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update: if true; // simplified for prototype
     }
   }
 }

@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Brain, Search, Network, Folder, LogOut, Plus, HelpCircle, MessageSquare, Mic } from 'lucide-react';
+import { useFeatures } from '../../hooks/useFeatures';
+import { Brain, Search, Network, Folder, LogOut, Plus, HelpCircle, MessageSquare, Mic, Shield } from 'lucide-react';
 import AddItemModal from '../AddItemModal';
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, logout } = useAuth();
+  const { user, userDetails, logout } = useAuth();
+  const { isFeatureEnabled } = useFeatures();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const navItems = [
     { to: '/', icon: Brain, label: 'Dashboard' },
     { to: '/search', icon: Search, label: 'Search' },
-    { to: '/chat', icon: MessageSquare, label: 'AI Assistant' },
-    { to: '/journal', icon: Mic, label: 'Voice Journal' },
     { to: '/graph', icon: Network, label: 'Knowledge Graph' },
     { to: '/collections', icon: Folder, label: 'Collections' },
     { to: '/help', icon: HelpCircle, label: 'Help & Guide' },
   ];
+
+  if (isFeatureEnabled('aiChat')) {
+    navItems.splice(2, 0, { to: '/chat', icon: MessageSquare, label: 'AI Assistant' });
+  }
+  
+  if (isFeatureEnabled('voiceJournal')) {
+    navItems.splice(3, 0, { to: '/journal', icon: Mic, label: 'Voice Journal' });
+  }
+
+  if (userDetails?.role === 'admin') {
+    navItems.push({ to: '/malik-admin', icon: Shield, label: 'Admin Panel' });
+  }
 
   return (
     <>

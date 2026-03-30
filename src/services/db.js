@@ -283,6 +283,7 @@ export async function deleteItem(itemId) {
 }
 
 export async function getPublicCollection(collectionId) {
+  const { doc, getDoc, query, collection, where, documentId, getDocs } = await import('firebase/firestore');
   const collectionSnap = await getDoc(doc(db, 'collections', collectionId));
   
   if (!collectionSnap.exists() || !collectionSnap.data().isPublic) {
@@ -302,4 +303,55 @@ export async function getPublicCollection(collectionId) {
   }
   
   return { collection: collectionData, items };
+}
+
+// --- Admin Functions ---
+
+export async function getAnalytics() {
+  const { doc, getDoc } = await import('firebase/firestore');
+  const snap = await getDoc(doc(db, 'analytics', 'visitors'));
+  return snap.exists() ? snap.data() : { count: 0 };
+}
+
+export async function getUsers() {
+  const { collection, getDocs } = await import('firebase/firestore');
+  const snap = await getDocs(collection(db, 'users'));
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function updateUserRole(userId, role) {
+  const { doc, updateDoc } = await import('firebase/firestore');
+  await updateDoc(doc(db, 'users', userId), { role });
+}
+
+export async function updateUserPermissions(userId, permissions) {
+  const { doc, updateDoc } = await import('firebase/firestore');
+  await updateDoc(doc(db, 'users', userId), { permissions });
+}
+
+export async function updateUserDisabledFeatures(userId, disabledFeatures) {
+  const { doc, updateDoc } = await import('firebase/firestore');
+  await updateDoc(doc(db, 'users', userId), { disabledFeatures });
+}
+
+export async function deleteUserDocument(userId) {
+  const { doc, deleteDoc } = await import('firebase/firestore');
+  await deleteDoc(doc(db, 'users', userId));
+}
+
+export async function getSettings() {
+  const { doc, getDoc } = await import('firebase/firestore');
+  const snap = await getDoc(doc(db, 'settings', 'global'));
+  return snap.exists() ? snap.data() : { features: {} };
+}
+
+export async function updateSettings(settings) {
+  const { doc, setDoc } = await import('firebase/firestore');
+  await setDoc(doc(db, 'settings', 'global'), settings, { merge: true });
+}
+
+export function subscribeToSettings(callback) {
+  return onSnapshot(doc(db, 'settings', 'global'), (doc) => {
+    callback(doc.exists() ? doc.data() : { features: {} });
+  });
 }
