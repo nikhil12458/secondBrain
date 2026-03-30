@@ -25,6 +25,7 @@ export default function Dashboard() {
   // State for Add to Collection dropdown
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [addingToCollection, setAddingToCollection] = useState(false);
+  const [expandedExplanation, setExpandedExplanation] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -194,6 +195,23 @@ export default function Dashboard() {
             <p className="text-sm text-zinc-400 line-clamp-3 mb-4 flex-1">
               {item.summary || item.content}
             </p>
+
+            {item.explanation && (
+              <div className="mb-4">
+                <button
+                  onClick={() => setExpandedExplanation(expandedExplanation === item.id ? null : item.id)}
+                  className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  {expandedExplanation === item.id ? 'Hide AI Explanation' : 'Explain with AI'}
+                </button>
+                {expandedExplanation === item.id && (
+                  <div className="mt-2 p-3 bg-indigo-900/20 border border-indigo-500/20 rounded-lg text-sm text-indigo-200/90 leading-relaxed">
+                    {item.explanation}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-zinc-800/50">
               {item.tags?.map((tag, i) => (

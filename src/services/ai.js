@@ -1,67 +1,42 @@
-const MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY || "Yt8SYqq7iJMQR2aQhdRWfeUHfcm3Sndc";
-
 export async function generateTagsAndSummary(content, type, title) {
   try {
-    const prompt = `
-      Analyze the following ${type} titled "${title}".
-      Content/Description: ${content}
-      
-      Provide a JSON response with two fields:
-      1. "tags": An array of 3-5 relevant string tags.
-      2. "summary": A concise 1-2 sentence summary.
-    `;
-
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    const response = await fetch('/api/ai/summarize', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MISTRAL_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'mistral-small-latest',
-        response_format: { type: "json_object" },
-        messages: [{ role: 'user', content: prompt }]
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, type, title })
     });
 
     if (!response.ok) {
-      throw new Error(`Mistral API error: ${response.statusText}`);
+      throw new Error(`Server error: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const resultText = data.choices[0].message.content;
-    const result = JSON.parse(resultText || '{}');
+    const result = await response.json();
     
     return {
       tags: result.tags || [],
-      summary: result.summary || ''
+      summary: result.summary || '',
+      explanation: result.explanation || ''
     };
   } catch (error) {
     console.error('AI Processing Error:', error);
-    return { tags: [], summary: '' };
+    return { tags: [], summary: '', explanation: '' };
   }
 }
 
 export async function generateEmbeddings(text) {
   try {
-    const response = await fetch('https://api.mistral.ai/v1/embeddings', {
+    const response = await fetch('/api/ai/embed', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MISTRAL_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'mistral-embed',
-        input: [text]
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
     });
 
     if (!response.ok) {
-      throw new Error(`Mistral API error: ${response.statusText}`);
+      throw new Error(`Server error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    return data.data[0].embedding || [];
+    return data.embedding || [];
   } catch (error) {
     console.error('Embedding Error:', error);
     return [];

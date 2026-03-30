@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getPublicCollection } from '../services/db';
-import { Loader2, ExternalLink, FileText, Video, Image as ImageIcon, File, Hash, MessageSquare } from 'lucide-react';
+import { Loader2, ExternalLink, FileText, Video, Image as ImageIcon, File, Hash, MessageSquare, Sparkles } from 'lucide-react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -19,6 +19,7 @@ export default function PublicCollection() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedExplanation, setExpandedExplanation] = useState(null);
 
   useEffect(() => {
     getPublicCollection(collectionId)
@@ -87,6 +88,23 @@ export default function PublicCollection() {
               <p className="text-zinc-400 text-sm mb-6 flex-1 line-clamp-3">
                 {item.summary || item.content}
               </p>
+
+              {item.explanation && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => setExpandedExplanation(expandedExplanation === item.id ? null : item.id)}
+                    className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    {expandedExplanation === item.id ? 'Hide AI Explanation' : 'Explain with AI'}
+                  </button>
+                  {expandedExplanation === item.id && (
+                    <div className="mt-2 p-3 bg-indigo-900/20 border border-indigo-500/20 rounded-lg text-sm text-indigo-200/90 leading-relaxed">
+                      {item.explanation}
+                    </div>
+                  )}
+                </div>
+              )}
               
               {item.tags && item.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-zinc-800/50">

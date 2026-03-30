@@ -71,7 +71,7 @@ export function subscribeToGraphData(userId, callback) {
 export async function saveItem(userId, data) {
   const aiData = await generateTagsAndSummary(data.content || '', data.type || 'note', data.title || '');
   
-  const embeddingText = `${data.title} ${data.content} ${aiData.tags.join(' ')} ${aiData.summary}`;
+  const embeddingText = `${data.title} ${data.content} ${aiData.tags.join(' ')} ${aiData.summary} ${aiData.explanation}`;
   const embedding = await generateEmbeddings(embeddingText);
 
   const itemData = {
@@ -79,6 +79,7 @@ export async function saveItem(userId, data) {
     userId,
     tags: aiData.tags,
     summary: aiData.summary,
+    explanation: aiData.explanation,
     embedding,
     createdAt: serverTimestamp(),
   };

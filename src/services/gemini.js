@@ -1,7 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 export async function createChatSession(items) {
   // Format items into a readable context
   const context = items.map(item => `
@@ -10,27 +6,39 @@ Title: ${item.title}
 Type: ${item.type}
 Date Saved: ${item.createdAt?.toDate ? item.createdAt.toDate().toISOString() : 'Unknown'}
 Summary: ${item.summary || 'N/A'}
+Explanation: ${item.explanation || 'N/A'}
 Content: ${item.content || 'N/A'}
 Tags: ${(item.tags || []).join(', ')}
 URL: ${item.url || 'N/A'}
 `).join('\n---\n');
 
-  const systemInstruction = `You are a helpful AI assistant for the user's "Second Brain" application. 
-The user has saved various items (notes, articles, videos, images, etc.) in their second brain.
-Here is the current list of their saved items:
+  let history = [];
 
-${context}
+  // Return a mock chat object that matches the expected interface
+  return {
+    sendMessage: async ({ message }) => {
+      try {
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, context, history })
+        });
 
-Use this information to answer the user's questions about their saved items. 
-If they ask about something not in their second brain, you can still answer generally, but prioritize their saved knowledge.
-If they ask about an old item, be conversational and helpful.`;
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.statusText}`);
+        }
 
-  const chat = ai.chats.create({
-    model: "gemini-3-flash-preview",
-    config: {
-      systemInstruction,
-    },
-  });
-
-  return chat;
+        const data = await response.json();
+        
+        // Update history
+        history.push({ role: 'user', text: message });
+        history.push({ role: 'model', text: data.text });
+        
+        return { text: data.text };
+      } catch (error) {
+        console.error('Chat Error:', error);
+        throw error;
+      }
+    }
+  };
 }

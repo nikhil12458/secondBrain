@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { saveItem, uploadImage } from '../services/db';
-import { X, Loader2, Link as LinkIcon, Upload } from 'lucide-react';
+import { X, Loader2, Link as LinkIcon, Upload, Mic, MicOff } from 'lucide-react';
 
 export default function AddItemModal({ onClose }) {
   const { user } = useAuth();
@@ -12,7 +12,56 @@ export default function AddItemModal({ onClose }) {
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingMeta, setFetchingMeta] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + ' ';
+          }
+        }
+        if (finalTranscript) {
+          setContent((prev) => (prev ? prev + ' ' + finalTranscript : finalTranscript));
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      setContent((prev) => prev ? prev + ' ' : '');
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
 
   const handleAutoFill = async () => {
     if (!url) return;
@@ -171,7 +220,30 @@ export default function AddItemModal({ onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">Content / Description</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-zinc-400">Content / Description</label>
+              {recognitionRef.current && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    isListening 
+                      ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' 
+                      : 'bg-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700'
+                  }`}
+                >
+                  {isListening ? (
+                    <>
+                      <MicOff className="w-3 h-3" /> Stop Listening
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-3 h-3" /> Dictate
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
             <textarea
               required
               value={content}
