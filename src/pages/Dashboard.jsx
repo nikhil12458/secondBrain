@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToItems, subscribeToCollections, addItemToCollection } from '../services/db';
+import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2 } from 'lucide-react';
+import EditItemModal from '../components/EditItemModal';
+import { deleteItem } from '../services/db';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -18,6 +21,7 @@ const TypeIcon = ({ type }) => {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [collections, setCollections] = useState([]);
   const [resurfacedItem, setResurfacedItem] = useState(null);
@@ -27,6 +31,8 @@ export default function Dashboard() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [addingToCollection, setAddingToCollection] = useState(false);
   const [expandedExplanation, setExpandedExplanation] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [deletingItemId, setDeletingItemId] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -88,6 +94,20 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteItem = async (itemId) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      setDeletingItemId(itemId);
+      try {
+        await deleteItem(itemId);
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete item');
+      } finally {
+        setDeletingItemId(null);
+      }
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading your brain...</div>;
   }
@@ -133,7 +153,11 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold text-zinc-100 mb-4">Recent Additions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((item) => (
-          <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors flex flex-col relative">
+          <div 
+            key={item.id} 
+            onClick={() => navigate(`/item/${item.id}`)}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors flex flex-col relative cursor-pointer"
+          >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-zinc-950 rounded-lg">
@@ -147,9 +171,24 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="relative">
+                <div className="relative" onClick={(e) => e.stopPropagation()}>
                   <button 
-                    onClick={() => setActiveDropdown(activeDropdown === item.id ? null : item.id)}
+                    onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}
+                    className="text-zinc-500 hover:text-zinc-300 p-1"
+                    title="Edit Item"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                    disabled={deletingItemId === item.id}
+                    className="text-zinc-500 hover:text-red-400 p-1 disabled:opacity-50"
+                    title="Delete Item"
+                  >
+                    {deletingItemId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === item.id ? null : item.id); }}
                     className="text-zinc-500 hover:text-zinc-300 p-1"
                     title="Add to Collection"
                   >
@@ -167,7 +206,7 @@ export default function Dashboard() {
                           {collections.map(c => (
                             <button
                               key={c.id}
-                              onClick={() => handleAddToCollection(c.id, item.id)}
+                              onClick={(e) => { e.stopPropagation(); handleAddToCollection(c.id, item.id); }}
                               disabled={addingToCollection}
                               className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors truncate"
                             >
@@ -180,7 +219,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 {item.url && (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-zinc-300 p-1">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-zinc-500 hover:text-zinc-300 p-1">
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
@@ -198,9 +237,9 @@ export default function Dashboard() {
             </p>
 
             {item.explanation && (
-              <div className="mb-4">
+              <div className="mb-4" onClick={(e) => e.stopPropagation()}>
                 <button
-                  onClick={() => setExpandedExplanation(expandedExplanation === item.id ? null : item.id)}
+                  onClick={(e) => { e.stopPropagation(); setExpandedExplanation(expandedExplanation === item.id ? null : item.id); }}
                   className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
                 >
                   <Sparkles className="w-3 h-3" />
@@ -232,6 +271,13 @@ export default function Dashboard() {
         )}
         </div>
       </div>
+      
+      {editingItem && (
+        <EditItemModal 
+          item={editingItem} 
+          onClose={() => setEditingItem(null)} 
+        />
+      )}
     </div>
   );
 }

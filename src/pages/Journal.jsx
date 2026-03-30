@@ -37,6 +37,13 @@ export default function Journal() {
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
+        if (event.error === 'network') {
+          alert('Speech recognition network error. This browser may not support the Web Speech API fully, or you may be offline.');
+        } else if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please allow microphone access.');
+        } else if (event.error !== 'no-speech') {
+          alert(`Speech recognition error: ${event.error}`);
+        }
       };
 
       recognitionRef.current.onend = () => {

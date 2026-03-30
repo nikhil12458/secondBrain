@@ -1,19 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { saveItem, uploadImage } from '../services/db';
-import { X, Loader2, Link as LinkIcon, Upload, Mic, MicOff } from 'lucide-react';
+import { updateItem } from '../services/db';
+import { X, Loader2, Mic, MicOff, Hash } from 'lucide-react';
 
-export default function AddItemModal({ onClose }) {
-  const { user } = useAuth();
-  const [type, setType] = useState('note');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [url, setUrl] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+export default function EditItemModal({ item, onClose }) {
+  const [title, setTitle] = useState(item.title || '');
+  const [content, setContent] = useState(item.content || '');
+  const [tags, setTags] = useState(item.tags ? item.tags.join(', ') : '');
   const [loading, setLoading] = useState(false);
-  const [fetchingMeta, setFetchingMeta] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
@@ -70,68 +64,20 @@ export default function AddItemModal({ onClose }) {
     }
   };
 
-  const handleAutoFill = async () => {
-    if (!url) return;
-    setFetchingMeta(true);
-    try {
-      const res = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`);
-      const json = await res.json();
-      if (json.status === 'success') {
-        setTitle(json.data.title || '');
-        setContent(json.data.description || json.data.title || 'No description available.');
-        
-        // Auto-detect type
-        const urlLower = url.toLowerCase();
-        if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
-          setType('video');
-        } else if (urlLower.includes('twitter.com') || urlLower.includes('x.com') || urlLower.includes('instagram.com')) {
-          setType('social');
-        } else {
-          setType('article');
-        }
-      } else {
-        alert('Could not fetch metadata for this URL.');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error fetching metadata.');
-    } finally {
-      setFetchingMeta(false);
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      if (!title) {
-        setTitle(file.name.split('.')[0]);
-      }
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) return;
-    
     setLoading(true);
     try {
-      let finalUrl = url;
-      
-      if (type === 'image' && imageFile) {
-        finalUrl = await uploadImage(imageFile, user.uid);
-      }
-
-      await saveItem(user.uid, {
-        type,
+      const parsedTags = tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      await updateItem(item.id, {
         title,
         content,
-        url: finalUrl || undefined,
+        tags: parsedTags
       });
       onClose();
     } catch (error) {
-      console.error('Error saving item:', error);
-      alert('Failed to save item. Please try again.');
+      console.error('Error updating item:', error);
+      alert('Failed to update item. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -141,79 +87,13 @@ export default function AddItemModal({ onClose }) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-6 border-b border-zinc-800 flex-shrink-0">
-          <h2 className="text-xl font-semibold text-zinc-100">Add to Second Brain</h2>
+          <h2 className="text-xl font-semibold text-zinc-100">Edit Item</h2>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">Type</label>
-            <select
-              value={type}
-              onChange={(e) => {
-                setType(e.target.value);
-                if (e.target.value !== 'image') {
-                  setImageFile(null);
-                }
-              }}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-            >
-              <option value="note">Note</option>
-              <option value="article">Article</option>
-              <option value="video">Video</option>
-              <option value="social">Social Media</option>
-              <option value="image">Image</option>
-              <option value="pdf">PDF</option>
-            </select>
-          </div>
-
-          {type === 'image' ? (
-            <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Upload Image</label>
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-zinc-700 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors bg-zinc-950"
-              >
-                <Upload className="w-8 h-8 text-zinc-500 mb-2" />
-                <span className="text-zinc-400 text-sm">
-                  {imageFile ? imageFile.name : 'Click to select an image from your device'}
-                </span>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-              </div>
-              <div className="mt-2 text-center text-zinc-500 text-xs">Or provide an image URL below</div>
-            </div>
-          ) : null}
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">URL (Optional)</label>
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://..."
-                className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-              />
-              <button
-                type="button"
-                onClick={handleAutoFill}
-                disabled={!url || fetchingMeta || type === 'image'}
-                className="bg-zinc-800 text-zinc-100 px-4 py-2 rounded-lg font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {fetchingMeta ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
-                Auto-fill
-              </button>
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-zinc-400 mb-1">Title</label>
             <input
@@ -222,6 +102,19 @@ export default function AddItemModal({ onClose }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter title..."
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-1 flex items-center gap-1">
+              <Hash className="w-3 h-3" /> Tags (comma separated)
+            </label>
+            <input
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="e.g. react, tutorial, frontend"
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
             />
           </div>
@@ -275,7 +168,7 @@ export default function AddItemModal({ onClose }) {
               className="bg-zinc-100 text-zinc-900 px-6 py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {loading ? 'Processing AI...' : 'Save Item'}
+              {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>

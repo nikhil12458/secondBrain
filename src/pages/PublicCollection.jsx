@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPublicCollection } from '../services/db';
 import { Loader2, ExternalLink, FileText, Video, Image as ImageIcon, File, Hash, MessageSquare, Sparkles, Mic } from 'lucide-react';
 
@@ -17,6 +17,7 @@ const TypeIcon = ({ type }) => {
 
 export default function PublicCollection() {
   const { collectionId } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,7 +67,11 @@ export default function PublicCollection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {items.map(item => (
-            <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col hover:border-zinc-700 transition-colors">
+            <div 
+              key={item.id} 
+              onClick={() => navigate(`/item/${item.id}`)}
+              className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col hover:border-zinc-700 transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800">
@@ -79,6 +84,7 @@ export default function PublicCollection() {
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="text-zinc-500 hover:text-zinc-300 transition-colors"
                   >
                     <ExternalLink className="w-5 h-5" />
@@ -91,9 +97,9 @@ export default function PublicCollection() {
               </p>
 
               {item.explanation && (
-                <div className="mb-4">
+                <div className="mb-4" onClick={(e) => e.stopPropagation()}>
                   <button
-                    onClick={() => setExpandedExplanation(expandedExplanation === item.id ? null : item.id)}
+                    onClick={(e) => { e.stopPropagation(); setExpandedExplanation(expandedExplanation === item.id ? null : item.id); }}
                     className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
                   >
                     <Sparkles className="w-3 h-3" />

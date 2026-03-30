@@ -11,6 +11,7 @@ import PublicCollection from './pages/PublicCollection';
 import Login from './pages/Login';
 import Help from './pages/Help';
 import Journal from './pages/Journal';
+import ItemDetail from './pages/ItemDetail';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -26,8 +27,10 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/c/:collectionId" element={<PublicCollection />} />
+          <Route path="/item/:itemId" element={<ItemDetail />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
+            <Route path="item/:itemId" element={<ItemDetail />} />
             <Route path="graph" element={<GraphView />} />
             <Route path="search" element={<Search />} />
             <Route path="chat" element={<Chat />} />

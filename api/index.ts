@@ -18,7 +18,7 @@ app.get("/api/health", (req, res) => {
 
 app.post("/api/ai/summarize", async (req, res) => {
   try {
-    const { content, type, title } = req.body;
+    const { content, type, title, url } = req.body;
     
     const model = new ChatMistralAI({
       apiKey: MISTRAL_API_KEY,
@@ -28,18 +28,19 @@ app.post("/api/ai/summarize", async (req, res) => {
 
     const prompt = PromptTemplate.fromTemplate(`
       Analyze the following {type} titled "{title}".
+      URL: {url}
       Content/Description: {content}
       
       Provide a JSON response with three fields:
-      1. "tags": An array of 3-5 relevant string tags.
-      2. "summary": A concise 1-2 sentence summary.
-      3. "explanation": A detailed explanation of the resource, its key points, and why it might be useful.
+      1. "tags": An array of 3-7 relevant string tags.
+      2. "summary": A highly detailed and comprehensive summary of this {type}. If it's a video, summarize the expected key points, themes, and narrative of the video based on the title and description. If it's an article, document, or note, provide a thorough breakdown of the main arguments and details. Do not just write 1-2 sentences; be highly descriptive and thorough.
+      3. "explanation": A deep-dive explanation of the resource, its context, and why it is valuable to remember.
       
       Return ONLY valid JSON.
     `);
 
     const chain = prompt.pipe(model).pipe(new StringOutputParser());
-    const resultText = await chain.invoke({ type, title, content });
+    const resultText = await chain.invoke({ type, title, content, url: url || 'None provided' });
     
     // Clean up potential markdown formatting in the response
     const cleanedText = resultText.replace(/^\`\`\`json\n?/, '').replace(/\n?\`\`\`$/, '').trim();

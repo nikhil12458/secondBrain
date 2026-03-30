@@ -69,7 +69,7 @@ export function subscribeToGraphData(userId, callback) {
 }
 
 export async function saveItem(userId, data) {
-  const aiData = await generateTagsAndSummary(data.content || '', data.type || 'note', data.title || '');
+  const aiData = await generateTagsAndSummary(data.content || '', data.type || 'note', data.title || '', data.url || '');
   
   const embeddingText = `${data.title} ${data.content} ${aiData.tags.join(' ')} ${aiData.summary} ${aiData.explanation}`;
   const embedding = await generateEmbeddings(embeddingText);
@@ -240,6 +240,44 @@ export async function toggleCollectionPublic(collectionId, isPublic) {
   for (const itemId of itemIds) {
     batch.update(doc(db, 'items', itemId), { isPublic });
   }
+  
+  await batch.commit();
+}
+
+export async function getItem(itemId) {
+  const { doc, getDoc } = await import('firebase/firestore');
+  const docSnap = await getDoc(doc(db, 'items', itemId));
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() };
+  }
+  throw new Error('Item not found');
+}
+
+export async function updateItem(itemId, data) {
+  const { doc, updateDoc } = await import('firebase/firestore');
+  const itemRef = doc(db, 'items', itemId);
+  
+  // If content or title changed, we might want to regenerate embeddings/tags, 
+  // but for simplicity we'll just update the provided fields.
+  await updateDoc(itemRef, data);
+}
+
+export async function deleteItem(itemId) {
+  const { doc, deleteDoc, query, collection, where, getDocs, writeBatch } = await import('firebase/firestore');
+  
+  // Delete the item itself
+  await deleteDoc(doc(db, 'items', itemId));
+  
+  // Delete related relations
+  const batch = writeBatch(db);
+  
+  const sourceRelationsQ = query(collection(db, 'relations'), where('sourceItemId', '==', itemId));
+  const sourceRelationsSnap = await getDocs(sourceRelationsQ);
+  sourceRelationsSnap.forEach(doc => batch.delete(doc.ref));
+  
+  const targetRelationsQ = query(collection(db, 'relations'), where('targetItemId', '==', itemId));
+  const targetRelationsSnap = await getDocs(targetRelationsQ);
+  targetRelationsSnap.forEach(doc => batch.delete(doc.ref));
   
   await batch.commit();
 }

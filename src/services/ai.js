@@ -1,9 +1,9 @@
-export async function generateTagsAndSummary(content, type, title) {
+export async function generateTagsAndSummary(content, type, title, url) {
   try {
     const response = await fetch('/api/ai/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, type, title })
+      body: JSON.stringify({ content, type, title, url })
     });
 
     if (!response.ok) {
