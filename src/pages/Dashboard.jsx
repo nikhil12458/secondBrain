@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToItems, subscribeToCollections, addItemToCollection } from '../services/db';
 import { format, differenceInDays } from 'date-fns';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2 } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic } from 'lucide-react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -11,6 +11,7 @@ const TypeIcon = ({ type }) => {
     case 'image': return <ImageIcon className="w-5 h-5 text-green-400" />;
     case 'pdf': return <File className="w-5 h-5 text-orange-400" />;
     case 'social': return <MessageCircle className="w-5 h-5 text-pink-400" />;
+    case 'journal': return <Mic className="w-5 h-5 text-purple-400" />;
     default: return <StickyNote className="w-5 h-5 text-yellow-400" />;
   }
 };
@@ -47,7 +48,7 @@ export default function Dashboard() {
         const olderItems = itemsData.filter(item => {
           if (!item.createdAt?.toDate) return false;
           const daysOld = differenceInDays(new Date(), item.createdAt.toDate());
-          return daysOld > 7;
+          return daysOld >= 2;
         });
         
         if (olderItems.length > 0) {
@@ -107,7 +108,7 @@ export default function Dashboard() {
             <Sparkles className="w-5 h-5" />
             <span>Memory Resurfaced</span>
             <span className="text-indigo-400/60 text-sm ml-2">
-              {resurfacedItem.createdAt?.toDate ? `Saved ${differenceInDays(new Date(), resurfacedItem.createdAt.toDate())} days ago` : 'From your archives'}
+              {resurfacedItem.createdAt?.toDate ? `You saved this ${resurfacedItem.type} ${differenceInDays(new Date(), resurfacedItem.createdAt.toDate())} days ago` : 'From your archives'}
             </span>
           </div>
           <div className="relative z-10 max-w-2xl">

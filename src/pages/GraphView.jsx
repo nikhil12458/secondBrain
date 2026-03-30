@@ -42,6 +42,7 @@ export default function GraphView() {
       case 'image': return '#4ADE80'; // green-400
       case 'pdf': return '#FB923C'; // orange-400
       case 'social': return '#F472B6'; // pink-400
+      case 'journal': return '#C084FC'; // purple-400
       default: return '#FACC15'; // yellow-400
     }
   };

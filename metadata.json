@@ -1,5 +1,5 @@
 {
   "name": "Second Brain",
   "description": "AI-powered knowledge management app to save, organize, and connect content.",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["microphone"]
 }

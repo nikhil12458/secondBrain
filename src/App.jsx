@@ -10,6 +10,7 @@ import Collections from './pages/Collections';
 import PublicCollection from './pages/PublicCollection';
 import Login from './pages/Login';
 import Help from './pages/Help';
+import Journal from './pages/Journal';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="graph" element={<GraphView />} />
             <Route path="search" element={<Search />} />
             <Route path="chat" element={<Chat />} />
+            <Route path="journal" element={<Journal />} />
             <Route path="collections" element={<Collections />} />
             <Route path="help" element={<Help />} />
           </Route>

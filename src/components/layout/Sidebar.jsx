@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Brain, Search, Network, Folder, LogOut, Plus, HelpCircle, MessageSquare } from 'lucide-react';
+import { Brain, Search, Network, Folder, LogOut, Plus, HelpCircle, MessageSquare, Mic } from 'lucide-react';
 import AddItemModal from '../AddItemModal';
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -12,6 +12,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { to: '/', icon: Brain, label: 'Dashboard' },
     { to: '/search', icon: Search, label: 'Search' },
     { to: '/chat', icon: MessageSquare, label: 'AI Assistant' },
+    { to: '/journal', icon: Mic, label: 'Voice Journal' },
     { to: '/graph', icon: Network, label: 'Knowledge Graph' },
     { to: '/collections', icon: Folder, label: 'Collections' },
     { to: '/help', icon: HelpCircle, label: 'Help & Guide' },

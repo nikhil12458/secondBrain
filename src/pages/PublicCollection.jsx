@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getPublicCollection } from '../services/db';
-import { Loader2, ExternalLink, FileText, Video, Image as ImageIcon, File, Hash, MessageSquare, Sparkles } from 'lucide-react';
+import { Loader2, ExternalLink, FileText, Video, Image as ImageIcon, File, Hash, MessageSquare, Sparkles, Mic } from 'lucide-react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -10,6 +10,7 @@ const TypeIcon = ({ type }) => {
     case 'image': return <ImageIcon className="w-5 h-5 text-green-400" />;
     case 'pdf': return <File className="w-5 h-5 text-orange-400" />;
     case 'social': return <MessageSquare className="w-5 h-5 text-pink-400" />;
+    case 'journal': return <Mic className="w-5 h-5 text-purple-400" />;
     default: return <FileText className="w-5 h-5 text-zinc-400" />;
   }
 };
