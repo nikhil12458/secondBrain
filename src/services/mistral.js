@@ -1,4 +1,4 @@
-export async function createChatSession(items) {
+export async function createChatSession(items, initialHistory = []) {
   // Format items into a readable context
   const context = items.map(item => `
 ID: ${item.id}
@@ -12,7 +12,7 @@ Tags: ${(item.tags || []).join(', ')}
 URL: ${item.url || 'N/A'}
 `).join('\n---\n');
 
-  let history = [];
+  let history = [...initialHistory];
 
   // Return a mock chat object that matches the expected interface
   return {

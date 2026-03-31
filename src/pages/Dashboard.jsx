@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { subscribeToItems, subscribeToCollections, addItemToCollection } from '../services/db';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2 } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2, RefreshCw } from 'lucide-react';
 import EditItemModal from '../components/EditItemModal';
 import { deleteItem } from '../services/db';
 
@@ -50,21 +50,30 @@ export default function Dashboard() {
       setItems(itemsData);
       itemsLoaded = true;
       
-      if (itemsData.length > 0) {
-        const olderItems = itemsData.filter(item => {
-          if (!item.createdAt?.toDate) return false;
-          const daysOld = differenceInDays(new Date(), item.createdAt.toDate());
-          return daysOld >= 2;
-        });
-        
-        if (olderItems.length > 0) {
-          const randomIndex = Math.floor(Math.random() * olderItems.length);
-          setResurfacedItem(olderItems[randomIndex]);
-        } else if (itemsData.length > 3) {
-          const randomIndex = Math.floor(Math.random() * itemsData.length);
-          setResurfacedItem(itemsData[randomIndex]);
+      setResurfacedItem(prev => {
+        if (prev) {
+          // Keep the current resurfaced item if it still exists in the new data
+          const stillExists = itemsData.find(i => i.id === prev.id);
+          if (stillExists) return stillExists;
         }
-      }
+        
+        // Otherwise pick a new one
+        if (itemsData.length > 0) {
+          const olderItems = itemsData.filter(item => {
+            if (!item.createdAt?.toDate) return false;
+            const daysOld = differenceInDays(new Date(), item.createdAt.toDate());
+            return daysOld >= 2;
+          });
+          
+          if (olderItems.length > 0) {
+            return olderItems[Math.floor(Math.random() * olderItems.length)];
+          } else if (itemsData.length > 3) {
+            return itemsData[Math.floor(Math.random() * itemsData.length)];
+          }
+        }
+        return null;
+      });
+
       checkLoading();
     });
 
@@ -108,6 +117,29 @@ export default function Dashboard() {
     }
   };
 
+  const shuffleMemory = () => {
+    if (items.length === 0) return;
+    
+    const olderItems = items.filter(item => {
+      if (!item.createdAt?.toDate) return false;
+      const daysOld = differenceInDays(new Date(), item.createdAt.toDate());
+      return daysOld >= 2;
+    });
+    
+    // Fallback to all items if no older items
+    const pool = olderItems.length > 0 ? olderItems : items;
+    
+    // Try to pick a different item than the current one
+    const availablePool = pool.length > 1 && resurfacedItem 
+      ? pool.filter(i => i.id !== resurfacedItem.id) 
+      : pool;
+      
+    if (availablePool.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availablePool.length);
+      setResurfacedItem(availablePool[randomIndex]);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading your brain...</div>;
   }
@@ -130,6 +162,14 @@ export default function Dashboard() {
             <span className="text-indigo-400/60 text-sm ml-2">
               {resurfacedItem.createdAt?.toDate ? `You saved this ${resurfacedItem.type} ${differenceInDays(new Date(), resurfacedItem.createdAt.toDate())} days ago` : 'From your archives'}
             </span>
+            <button 
+              onClick={shuffleMemory}
+              className="ml-auto flex items-center gap-1 text-xs bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg transition-colors font-medium border border-indigo-500/30"
+              title="Show another memory"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Shuffle
+            </button>
           </div>
           <div className="relative z-10 max-w-2xl">
             <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{resurfacedItem.title}</h2>

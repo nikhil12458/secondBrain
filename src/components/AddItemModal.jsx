@@ -153,14 +153,20 @@ export default function AddItemModal({ onClose }) {
             <select
               value={type}
               onChange={(e) => {
-                setType(e.target.value);
-                if (e.target.value !== 'image') {
+                const newType = e.target.value;
+                setType(newType);
+                if (newType !== 'image') {
                   setImageFile(null);
+                }
+                if (newType === 'journal' && !title) {
+                  const date = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                  setTitle(`Journal Entry - ${date}`);
                 }
               }}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
             >
               <option value="note">Note</option>
+              <option value="journal">Voice Journal</option>
               <option value="article">Article</option>
               <option value="video">Video</option>
               <option value="social">Social Media</option>
@@ -192,27 +198,29 @@ export default function AddItemModal({ onClose }) {
             </div>
           ) : null}
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">URL (Optional)</label>
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://..."
-                className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-              />
-              <button
-                type="button"
-                onClick={handleAutoFill}
-                disabled={!url || fetchingMeta || type === 'image'}
-                className="bg-zinc-800 text-zinc-100 px-4 py-2 rounded-lg font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {fetchingMeta ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
-                Auto-fill
-              </button>
+          {type !== 'image' && type !== 'journal' && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">URL (Optional)</label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                />
+                <button
+                  type="button"
+                  onClick={handleAutoFill}
+                  disabled={!url || fetchingMeta}
+                  className="bg-zinc-800 text-zinc-100 px-4 py-2 rounded-lg font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {fetchingMeta ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
+                  Auto-fill
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-zinc-400 mb-1">Title</label>
@@ -228,24 +236,28 @@ export default function AddItemModal({ onClose }) {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-zinc-400">Content / Description</label>
+              <label className="block text-sm font-medium text-zinc-400">
+                {type === 'journal' ? 'Journal Entry' : 'Content / Description'}
+              </label>
               {recognitionRef.current && (
                 <button
                   type="button"
                   onClick={toggleListening}
-                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isListening 
-                      ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' 
-                      : 'bg-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700'
+                      ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30 animate-pulse' 
+                      : type === 'journal' 
+                        ? 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30'
+                        : 'bg-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700'
                   }`}
                 >
                   {isListening ? (
                     <>
-                      <MicOff className="w-3 h-3" /> Stop Listening
+                      <MicOff className="w-4 h-4" /> Stop Listening
                     </>
                   ) : (
                     <>
-                      <Mic className="w-3 h-3" /> Dictate
+                      <Mic className="w-4 h-4" /> {type === 'journal' ? 'Start Recording' : 'Dictate'}
                     </>
                   )}
                 </button>
@@ -255,8 +267,8 @@ export default function AddItemModal({ onClose }) {
               required
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Paste content or write a description..."
-              rows={5}
+              placeholder={type === 'journal' ? "Click 'Start Recording' to dictate your journal entry, or type it here..." : "Paste content or write a description..."}
+              rows={type === 'journal' ? 8 : 5}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 resize-none"
             />
           </div>

@@ -170,18 +170,18 @@ const AdminPanel = () => {
         <div className="bg-zinc-900 shadow-sm rounded-xl border border-zinc-800 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-zinc-800">
-              <thead className="bg-zinc-800/50">
+              <thead className="bg-zinc-800/50 hidden sm:table-header-group">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Role & Permissions</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Feature Access</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">User</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Role & Permissions</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Feature Access</th>
+                  <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-zinc-900 divide-y divide-zinc-800">
                 {users.map((u) => (
-                  <tr key={u.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <tr key={u.id} className="flex flex-col sm:table-row">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           {u.photoURL ? (
@@ -198,7 +198,8 @@ const AdminPanel = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="sm:hidden text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Role & Permissions</div>
                       <select
                         value={u.role || 'user'}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
@@ -230,7 +231,8 @@ const AdminPanel = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="sm:hidden text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Feature Access</div>
                       <div className="flex flex-col gap-2">
                         {availableFeatures.map(feature => {
                           const isDisabled = (u.disabledFeatures || []).includes(feature);
@@ -249,15 +251,18 @@ const AdminPanel = () => {
                         })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleDeleteUser(u.id)}
-                        disabled={u.email === 'ektak144@gmail.com' || (u.id === userDetails.uid && userDetails.email !== 'ektak144@gmail.com')}
-                        className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed p-2 rounded-md hover:bg-zinc-800 transition-colors"
-                        title="Delete User Record"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap sm:text-right text-left text-sm font-medium border-t border-zinc-800 sm:border-t-0">
+                      <div className="flex justify-between items-center sm:justify-end">
+                        <div className="sm:hidden text-xs font-medium text-zinc-400 uppercase tracking-wider">Actions</div>
+                        <button
+                          onClick={() => handleDeleteUser(u.id)}
+                          disabled={u.email === 'ektak144@gmail.com' || (u.id === userDetails.uid && userDetails.email !== 'ektak144@gmail.com')}
+                          className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed p-2 rounded-md hover:bg-zinc-800 transition-colors"
+                          title="Delete User Record"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

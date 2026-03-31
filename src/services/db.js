@@ -355,3 +355,19 @@ export function subscribeToSettings(callback) {
     callback(doc.exists() ? doc.data() : { features: {} });
   });
 }
+
+// --- Chat History Functions ---
+
+export async function saveChatHistory(userId, messages) {
+  const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+  await setDoc(doc(db, 'chatHistory', userId), {
+    messages,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
+export async function loadChatHistory(userId) {
+  const { doc, getDoc } = await import('firebase/firestore');
+  const snap = await getDoc(doc(db, 'chatHistory', userId));
+  return snap.exists() ? snap.data().messages : [];
+}
