@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { subscribeToItems, subscribeToCollections, addItemToCollection } from '../services/db';
+import { subscribeToItems, subscribeToCollections, addItemToCollection, toggleItemPublic } from '../services/db';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2, RefreshCw } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2, RefreshCw, Share2, Check } from 'lucide-react';
 import EditItemModal from '../components/EditItemModal';
 import { deleteItem } from '../services/db';
 import { motion } from 'motion/react';
@@ -34,6 +34,18 @@ export default function Dashboard() {
   const [expandedExplanation, setExpandedExplanation] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItemId, setDeletingItemId] = useState(null);
+  const [copiedItemId, setCopiedItemId] = useState(null);
+
+  const handleShareItem = async (e, item) => {
+    e.stopPropagation();
+    if (!item.isPublic) {
+      await toggleItemPublic(item.id, true);
+    }
+    const url = `${window.location.origin}/shared/item/${item.id}`;
+    navigator.clipboard.writeText(url);
+    setCopiedItemId(item.id);
+    setTimeout(() => setCopiedItemId(null), 2000);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -248,6 +260,13 @@ export default function Dashboard() {
                     title="Add to Collection"
                   >
                     <FolderPlus className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => handleShareItem(e, item)}
+                    className="text-zinc-500 hover:text-indigo-400 p-1"
+                    title="Share Item"
+                  >
+                    {copiedItemId === item.id ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
                   </button>
                   {activeDropdown === item.id && (
                     <div className="absolute right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-20 py-1">

@@ -79,7 +79,7 @@ export default function PublicCollection() {
               whileHover={{ y: -4, scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               key={item.id} 
-              onClick={() => navigate(`/item/${item.id}`)}
+              onClick={() => navigate(`/shared/item/${item.id}`)}
               className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col hover:border-zinc-700 transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between gap-4 mb-4">

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getItem } from '../services/db';
+import { getItem, toggleItemPublic } from '../services/db';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, Loader2, ArrowLeft, Mic, Hash } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, Loader2, ArrowLeft, Mic, Hash, Share2, Check, Globe, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'motion/react';
 import AIActions from '../components/AIActions';
@@ -26,6 +26,25 @@ export default function ItemDetail() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (!item.isPublic) {
+      await toggleItemPublic(item.id, true);
+      setItem(prev => ({ ...prev, isPublic: true }));
+    }
+    
+    const url = `${window.location.origin}/shared/item/${item.id}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleTogglePublic = async () => {
+    const newIsPublic = !item.isPublic;
+    await toggleItemPublic(item.id, newIsPublic);
+    setItem(prev => ({ ...prev, isPublic: newIsPublic }));
+  };
 
   useEffect(() => {
     getItem(itemId)
@@ -65,7 +84,7 @@ export default function ItemDetail() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12">
+    <div className="max-w-4xl mx-auto space-y-8 p-4 md:p-8 pb-12">
       <motion.button 
         whileHover={{ x: -4 }}
         whileTap={{ scale: 0.95 }}
@@ -111,6 +130,25 @@ export default function ItemDetail() {
               </div>
             </div>
           </div>
+          
+          {user?.uid === item.userId && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleTogglePublic}
+                className={`p-2 rounded-lg transition-colors ${item.isPublic ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+                title={item.isPublic ? "Make Private" : "Publish"}
+              >
+                {item.isPublic ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors text-sm font-medium"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                {copied ? 'Copied!' : 'Share'}
+              </button>
+            </div>
+          )}
         </div>
       </motion.header>
 

@@ -232,16 +232,35 @@ export async function toggleCollectionPublic(collectionId, isPublic) {
   
   if (!collSnap.exists()) return;
   
-  const batch = writeBatch(db);
-  batch.update(collRef, { isPublic });
-  
-  // Update all items in the collection
   const itemIds = collSnap.data().itemIds || [];
-  for (const itemId of itemIds) {
-    batch.update(doc(db, 'items', itemId), { isPublic });
+  
+  // Chunk into batches of 400 to be safe (limit is 500)
+  const chunkSize = 400;
+  for (let i = 0; i < itemIds.length; i += chunkSize) {
+    const batch = writeBatch(db);
+    if (i === 0) {
+      batch.update(collRef, { isPublic });
+    }
+    
+    const chunk = itemIds.slice(i, i + chunkSize);
+    for (const itemId of chunk) {
+      batch.update(doc(db, 'items', itemId), { isPublic });
+    }
+    
+    await batch.commit();
   }
   
-  await batch.commit();
+  // If there were no items, we still need to update the collection
+  if (itemIds.length === 0) {
+    const batch = writeBatch(db);
+    batch.update(collRef, { isPublic });
+    await batch.commit();
+  }
+}
+
+export async function toggleItemPublic(itemId, isPublic) {
+  const itemRef = doc(db, 'items', itemId);
+  await updateDoc(itemRef, { isPublic });
 }
 
 export async function getItem(itemId) {
@@ -294,12 +313,16 @@ export async function getPublicCollection(collectionId) {
   
   let items = [];
   if (collectionData.itemIds && collectionData.itemIds.length > 0) {
-    // Note: 'in' queries are limited to 10 items. For a real app, chunking is needed.
-    // For this prototype, we'll just fetch the first 10.
-    const itemIds = collectionData.itemIds.slice(0, 10);
-    const itemsQ = query(collection(db, 'items'), where(documentId(), 'in', itemIds));
-    const itemsSnap = await getDocs(itemsQ);
-    items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const itemIds = collectionData.itemIds;
+    const chunkSize = 10;
+    
+    for (let i = 0; i < itemIds.length; i += chunkSize) {
+      const chunk = itemIds.slice(i, i + chunkSize);
+      const itemsQ = query(collection(db, 'items'), where(documentId(), 'in', chunk));
+      const itemsSnap = await getDocs(itemsQ);
+      const chunkItems = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      items = [...items, ...chunkItems];
+    }
   }
   
   return { collection: collectionData, items };

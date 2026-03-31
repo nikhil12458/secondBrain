@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatures } from '../hooks/useFeatures';
 import { subscribeToCollections, createCollection, toggleCollectionPublic } from '../services/db';
-import { Plus, Globe, Lock, Loader2, Copy } from 'lucide-react';
+import { Plus, Globe, Lock, Loader2, Copy, Share2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Collections() {
@@ -16,6 +16,7 @@ export default function Collections() {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -58,7 +59,8 @@ export default function Collections() {
   const copyLink = (collectionId) => {
     const url = `${window.location.origin}/c/${collectionId}`;
     navigator.clipboard.writeText(url);
-    alert('Public link copied to clipboard!');
+    setCopiedId(collectionId);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   if (loading) {
@@ -173,15 +175,23 @@ export default function Collections() {
               <span className="text-sm text-zinc-500">
                 {collection.itemIds?.length || 0} items
               </span>
-              {collection.isPublic && canMakePublic && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); copyLink(collection.id); }}
-                  className="text-sm text-zinc-400 hover:text-zinc-100 flex items-center gap-1"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy Link
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {canMakePublic && (
+                  <button
+                    onClick={async (e) => { 
+                      e.stopPropagation(); 
+                      if (!collection.isPublic) {
+                        await handleTogglePublic(collection);
+                      }
+                      copyLink(collection.id);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    {copiedId === collection.id ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                    {copiedId === collection.id ? 'Copied!' : 'Share'}
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         ))}

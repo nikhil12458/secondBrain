@@ -37,7 +37,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/c/:collectionId" element={<FeatureRoute feature="publicCollections"><PublicCollection /></FeatureRoute>} />
-          <Route path="/item/:itemId" element={<ItemDetail />} />
+          <Route path="/shared/item/:itemId" element={<ItemDetail />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
             <Route path="item/:itemId" element={<ItemDetail />} />
