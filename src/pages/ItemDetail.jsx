@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, Loader2, ArrowLeft, Mic, Hash } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'motion/react';
+import AIActions from '../components/AIActions';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -137,6 +138,8 @@ export default function ItemDetail() {
               {item.content}
             </div>
           </section>
+
+          <AIActions item={item} />
         </motion.div>
 
         <motion.div 
