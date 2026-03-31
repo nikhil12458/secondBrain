@@ -3,6 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { subscribeToItems } from '../services/db';
 import { generateEmbeddings } from '../services/ai';
 import { Search as SearchIcon, Loader2, Sparkles } from 'lucide-react';
+import { motion } from 'motion/react';
+
+import { useNavigate } from 'react-router-dom';
 
 function cosineSimilarity(vecA, vecB) {
   let dotProduct = 0;
@@ -19,6 +22,7 @@ function cosineSimilarity(vecA, vecB) {
 
 export default function Search() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [items, setItems] = useState([]);
   const [results, setResults] = useState([]);
@@ -90,19 +94,29 @@ export default function Search() {
           />
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-zinc-500" />
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={isSearching || !query.trim()}
           className="sm:absolute sm:right-2 sm:top-1/2 sm:-translate-y-1/2 w-full sm:w-auto bg-zinc-100 text-zinc-900 px-6 py-3 sm:py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSearching && <Loader2 className="w-4 h-4 animate-spin" />}
           Search
-        </button>
+        </motion.button>
       </form>
 
       <div className="space-y-4 max-w-3xl">
-        {results.map(({ item, score }) => (
-          <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors">
+        {results.map(({ item, score }, index) => (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.05 }}
+            whileHover={{ y: -2, scale: 1.01 }}
+            key={item.id} 
+            onClick={() => navigate(`/item/${item.id}`)}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 hover:shadow-lg hover:shadow-black/50 transition-all cursor-pointer"
+          >
             <div className="flex justify-between items-start mb-2">
               <h3 className="font-medium text-zinc-100 text-lg">{item.title}</h3>
               <span className="text-xs font-mono text-zinc-500 bg-zinc-950 px-2 py-1 rounded">
@@ -135,7 +149,7 @@ export default function Search() {
                 </span>
               ))}
             </div>
-          </div>
+          </motion.div>
         ))}
 
         {results.length === 0 && query && !isSearching && (

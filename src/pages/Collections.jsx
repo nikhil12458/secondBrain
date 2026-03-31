@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatures } from '../hooks/useFeatures';
 import { subscribeToCollections, createCollection, toggleCollectionPublic } from '../services/db';
 import { Plus, Globe, Lock, Loader2, Copy } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function Collections() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { isFeatureEnabled } = useFeatures();
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,60 +74,77 @@ export default function Collections() {
           <h1 className="text-3xl font-bold tracking-tight mb-2">Collections</h1>
           <p className="text-zinc-400">Organize your knowledge into curated spaces.</p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setShowAdd(true)}
           className="bg-zinc-100 text-zinc-900 px-4 py-2 rounded-lg font-medium hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Plus className="w-4 h-4" />
           New Collection
-        </button>
+        </motion.button>
       </header>
 
-      {showAdd && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Create Collection</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Name</label>
-              <input
-                type="text"
-                required
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Description</label>
-              <textarea
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowAdd(false)}
-                className="px-4 py-2 text-zinc-400 hover:text-zinc-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="bg-zinc-100 text-zinc-900 px-6 py-2 rounded-lg font-medium hover:bg-zinc-200 disabled:opacity-50"
-              >
-                {submitting ? 'Creating...' : 'Create'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <AnimatePresence>
+        {showAdd && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 overflow-hidden"
+          >
+            <h2 className="text-xl font-semibold mb-4">Create Collection</h2>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Description</label>
+                <textarea
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdd(false)}
+                  className="px-4 py-2 text-zinc-400 hover:text-zinc-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-zinc-100 text-zinc-900 px-6 py-2 rounded-lg font-medium hover:bg-zinc-200 disabled:opacity-50"
+                >
+                  {submitting ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {collections.map(collection => (
-          <div key={collection.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col">
+        {collections.map((collection, index) => (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            whileHover={{ y: -4, scale: 1.01 }}
+            key={collection.id} 
+            onClick={() => navigate(`/c/${collection.id}`)}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col hover:border-zinc-700 hover:shadow-xl hover:shadow-black/50 transition-all cursor-pointer"
+          >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-xl font-semibold flex items-center gap-2">
@@ -138,7 +158,7 @@ export default function Collections() {
               </div>
               {canMakePublic && (
                 <button
-                  onClick={() => handleTogglePublic(collection)}
+                  onClick={(e) => { e.stopPropagation(); handleTogglePublic(collection); }}
                   className={`p-2 rounded-lg transition-colors ${collection.isPublic ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
                   title={collection.isPublic ? "Make Private" : "Publish"}
                 >
@@ -155,7 +175,7 @@ export default function Collections() {
               </span>
               {collection.isPublic && canMakePublic && (
                 <button
-                  onClick={() => copyLink(collection.id)}
+                  onClick={(e) => { e.stopPropagation(); copyLink(collection.id); }}
                   className="text-sm text-zinc-400 hover:text-zinc-100 flex items-center gap-1"
                 >
                   <Copy className="w-4 h-4" />
@@ -163,7 +183,7 @@ export default function Collections() {
                 </button>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
         
         {collections.length === 0 && !showAdd && (

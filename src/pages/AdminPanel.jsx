@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { getAnalytics, getUsers, updateUserRole, updateUserDisabledFeatures, updateUserPermissions, getSettings, updateSettings, deleteUserDocument } from '../services/db';
-import { Shield, Users, Activity, Settings, Check, X, Trash2 } from 'lucide-react';
+import { Shield, Users, Activity, Settings, Check, X, Trash2, HelpCircle, BookOpen } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 const AdminPanel = () => {
   const { userDetails, loading } = useAuth();
@@ -133,41 +134,70 @@ const AdminPanel = () => {
       </div>
 
       <div className="flex border-b border-zinc-800 mb-8">
-        <button
+        <motion.button
+          whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.5)' }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setActiveTab('dashboard')}
           className={`py-4 px-6 font-medium text-sm focus:outline-none ${activeTab === 'dashboard' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-zinc-400 hover:text-zinc-200'}`}
         >
           <div className="flex items-center gap-2"><Activity className="w-4 h-4" /> Dashboard</div>
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.5)' }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setActiveTab('users')}
           className={`py-4 px-6 font-medium text-sm focus:outline-none ${activeTab === 'users' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-zinc-400 hover:text-zinc-200'}`}
         >
           <div className="flex items-center gap-2"><Users className="w-4 h-4" /> Users</div>
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.5)' }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setActiveTab('settings')}
           className={`py-4 px-6 font-medium text-sm focus:outline-none ${activeTab === 'settings' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-zinc-400 hover:text-zinc-200'}`}
         >
           <div className="flex items-center gap-2"><Settings className="w-4 h-4" /> Global Settings</div>
-        </button>
+        </motion.button>
+        <motion.button
+          whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.5)' }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setActiveTab('help')}
+          className={`py-4 px-6 font-medium text-sm focus:outline-none ${activeTab === 'help' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+        >
+          <div className="flex items-center gap-2"><HelpCircle className="w-4 h-4" /> Help & Guide</div>
+        </motion.button>
       </div>
 
-      {activeTab === 'dashboard' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-zinc-900 p-6 rounded-xl shadow-sm border border-zinc-800">
-            <h3 className="text-lg font-medium text-zinc-100 mb-2">Total Visitors</h3>
-            <p className="text-4xl font-bold text-indigo-400">{analytics.count}</p>
-          </div>
-          <div className="bg-zinc-900 p-6 rounded-xl shadow-sm border border-zinc-800">
-            <h3 className="text-lg font-medium text-zinc-100 mb-2">Total Users</h3>
-            <p className="text-4xl font-bold text-indigo-400">{users.length}</p>
-          </div>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {activeTab === 'dashboard' && (
+          <motion.div 
+            key="dashboard"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            <div className="bg-zinc-900 p-6 rounded-xl shadow-sm border border-zinc-800">
+              <h3 className="text-lg font-medium text-zinc-100 mb-2">Total Visitors</h3>
+              <p className="text-4xl font-bold text-indigo-400">{analytics.count}</p>
+            </div>
+            <div className="bg-zinc-900 p-6 rounded-xl shadow-sm border border-zinc-800">
+              <h3 className="text-lg font-medium text-zinc-100 mb-2">Total Users</h3>
+              <p className="text-4xl font-bold text-indigo-400">{users.length}</p>
+            </div>
+          </motion.div>
+        )}
 
-      {activeTab === 'users' && (
-        <div className="bg-zinc-900 shadow-sm rounded-xl border border-zinc-800 overflow-hidden">
+        {activeTab === 'users' && (
+          <motion.div 
+            key="users"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-zinc-900 shadow-sm rounded-xl border border-zinc-800 overflow-hidden"
+          >
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-zinc-800">
               <thead className="bg-zinc-800/50 hidden sm:table-header-group">
@@ -269,37 +299,112 @@ const AdminPanel = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {activeTab === 'settings' && (
-        <div className="bg-zinc-900 p-6 rounded-xl shadow-sm border border-zinc-800 max-w-2xl">
-          <h3 className="text-lg font-medium text-zinc-100 mb-4">Global Feature Flags</h3>
-          <p className="text-sm text-zinc-400 mb-6">Enable or disable features for all users across the application.</p>
-          
-          <div className="space-y-4">
-            {availableFeatures.map(feature => {
-              // Default to true if not explicitly disabled
-              const isEnabled = settings.features[feature] !== false;
-              
-              return (
-                <div key={feature} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-0">
-                  <div>
-                    <p className="font-medium text-zinc-100">{feature}</p>
-                    <p className="text-sm text-zinc-400">Toggle {feature} functionality globally.</p>
+          <motion.div 
+            key="settings"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-zinc-900 p-6 rounded-xl shadow-sm border border-zinc-800 max-w-2xl"
+          >
+            <h3 className="text-lg font-medium text-zinc-100 mb-4">Global Feature Flags</h3>
+            <p className="text-sm text-zinc-400 mb-6">Enable or disable features for all users across the application.</p>
+            
+            <div className="space-y-4">
+              {availableFeatures.map(feature => {
+                // Default to true if not explicitly disabled
+                const isEnabled = settings.features[feature] !== false;
+                
+                return (
+                  <div key={feature} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-0">
+                    <div>
+                      <p className="font-medium text-zinc-100">{feature}</p>
+                      <p className="text-sm text-zinc-400">Toggle {feature} functionality globally.</p>
+                    </div>
+                    <button
+                      onClick={() => handleGlobalFeatureToggle(feature)}
+                      className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${isEnabled ? 'bg-indigo-500' : 'bg-zinc-700'}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleGlobalFeatureToggle(feature)}
-                    className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${isEnabled ? 'bg-indigo-500' : 'bg-zinc-700'}`}
-                  >
-                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'help' && (
+          <motion.div 
+            key="help"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6 max-w-4xl"
+          >
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 hover:border-zinc-700 transition-colors">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center shrink-0">
+                  <Shield className="w-6 h-6 text-indigo-400" />
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                <div>
+                  <h2 className="text-2xl font-semibold text-zinc-100 mb-3">Admin Roles & Permissions</h2>
+                  <p className="text-zinc-400 mb-4 leading-relaxed">
+                    As an administrator, you have the ability to manage other users and their access levels.
+                  </p>
+                  <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-2">
+                    <li><strong>User vs Admin:</strong> Regular users can only access their own data. Admins can access the Admin Panel.</li>
+                    <li><strong>Super Admin:</strong> The primary admin (ektak144@gmail.com) cannot have their role changed or be deleted.</li>
+                    <li><strong>Permissions:</strong> You can grant specific permissions like <code className="bg-zinc-800 px-1 py-0.5 rounded">manage_users</code> or <code className="bg-zinc-800 px-1 py-0.5 rounded">manage_features</code> to other admins.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 hover:border-zinc-700 transition-colors">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center shrink-0">
+                  <Settings className="w-6 h-6 text-indigo-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-zinc-100 mb-3">Global Feature Flags</h2>
+                  <p className="text-zinc-400 mb-4 leading-relaxed">
+                    Feature flags allow you to turn specific application features on or off for all users.
+                  </p>
+                  <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-2">
+                    <li>Navigate to the <strong>Global Settings</strong> tab.</li>
+                    <li>Toggle features like AI Chat, Voice Journal, or Public Collections.</li>
+                    <li>When a feature is disabled globally, it is hidden from all users immediately.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 hover:border-zinc-700 transition-colors">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center shrink-0">
+                  <Users className="w-6 h-6 text-indigo-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-zinc-100 mb-3">User Management</h2>
+                  <p className="text-zinc-400 mb-4 leading-relaxed">
+                    Manage individual user access and feature availability.
+                  </p>
+                  <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-2">
+                    <li><strong>Feature Access:</strong> You can disable specific features for individual users (e.g., if they are abusing a feature).</li>
+                    <li><strong>Delete User:</strong> You can permanently delete a user's record from the system. This action cannot be undone.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {userToDelete && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">

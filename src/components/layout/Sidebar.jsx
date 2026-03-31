@@ -4,6 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFeatures } from '../../hooks/useFeatures';
 import { Brain, Search, Network, Folder, LogOut, Plus, HelpCircle, MessageSquare, Mic, Shield } from 'lucide-react';
 import AddItemModal from '../AddItemModal';
+import { motion } from 'motion/react';
+
+const MotionNavLink = motion(NavLink);
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, userDetails, logout } = useAuth();
@@ -49,21 +52,25 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <div className="px-4 mb-6 mt-6 md:mt-0">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => {
               setIsAddModalOpen(true);
               onClose?.();
             }}
-            className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 transition-colors py-2 px-4 rounded-lg flex items-center justify-center gap-2 font-medium"
+            className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 transition-colors py-2 px-4 rounded-lg flex items-center justify-center gap-2 font-medium shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Add Content
-          </button>
+          </motion.button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
-            <NavLink
+            <MotionNavLink
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.98 }}
               key={item.to}
               to={item.to}
               onClick={onClose}
@@ -77,7 +84,7 @@ export default function Sidebar({ isOpen, onClose }) {
             >
               <item.icon className="w-5 h-5" />
               {item.label}
-            </NavLink>
+            </MotionNavLink>
           ))}
         </nav>
 
@@ -93,7 +100,9 @@ export default function Sidebar({ isOpen, onClose }) {
               <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
             </div>
           </div>
-          <button
+          <motion.button
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => {
               logout();
               onClose?.();
@@ -102,7 +111,7 @@ export default function Sidebar({ isOpen, onClose }) {
           >
             <LogOut className="w-4 h-4" />
             Sign Out
-          </button>
+          </motion.button>
         </div>
       </div>
 

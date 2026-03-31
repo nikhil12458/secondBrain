@@ -6,6 +6,7 @@ import { format, differenceInDays } from 'date-fns';
 import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2, RefreshCw } from 'lucide-react';
 import EditItemModal from '../components/EditItemModal';
 import { deleteItem } from '../services/db';
+import { motion } from 'motion/react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -152,7 +153,12 @@ export default function Dashboard() {
       </header>
 
       {resurfacedItem && (
-        <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-6 relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-6 relative overflow-hidden"
+        >
           <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
             <Sparkles className="w-32 h-32" />
           </div>
@@ -162,20 +168,24 @@ export default function Dashboard() {
             <span className="text-indigo-400/60 text-sm ml-2">
               {resurfacedItem.createdAt?.toDate ? `You saved this ${resurfacedItem.type} ${differenceInDays(new Date(), resurfacedItem.createdAt.toDate())} days ago` : 'From your archives'}
             </span>
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={shuffleMemory}
               className="ml-auto flex items-center gap-1 text-xs bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg transition-colors font-medium border border-indigo-500/30"
               title="Show another memory"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Shuffle
-            </button>
+            </motion.button>
           </div>
           <div className="relative z-10 max-w-2xl">
             <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{resurfacedItem.title}</h2>
             <p className="text-indigo-200/80 mb-4 line-clamp-3">{resurfacedItem.summary || resurfacedItem.content}</p>
             {resurfacedItem.url && (
-              <a 
+              <motion.a 
+                whileHover={{ scale: 1.02, x: 2 }}
+                whileTap={{ scale: 0.98 }}
                 href={resurfacedItem.url} 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -183,20 +193,25 @@ export default function Dashboard() {
               >
                 <ExternalLink className="w-4 h-4" />
                 Revisit Content
-              </a>
+              </motion.a>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
 
       <div>
         <h2 className="text-xl font-semibold text-zinc-100 mb-4">Recent Additions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item) => (
-          <div 
+        {items.map((item, index) => (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            whileHover={{ y: -4, scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
             key={item.id} 
             onClick={() => navigate(`/item/${item.id}`)}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors flex flex-col relative cursor-pointer"
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 hover:shadow-xl hover:shadow-black/50 transition-all flex flex-col relative cursor-pointer"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -300,7 +315,7 @@ export default function Dashboard() {
                 </span>
               ))}
             </div>
-          </div>
+          </motion.div>
         ))}
         
         {items.length === 0 && (

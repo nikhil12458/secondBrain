@@ -4,6 +4,7 @@ import { getItem } from '../services/db';
 import { useAuth } from '../contexts/AuthContext';
 import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, Loader2, ArrowLeft, Mic, Hash } from 'lucide-react';
 import { format } from 'date-fns';
+import { motion } from 'motion/react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -64,15 +65,21 @@ export default function ItemDetail() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
-      <button 
+      <motion.button 
+        whileHover={{ x: -4 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors mb-4"
       >
         <ArrowLeft className="w-4 h-4" />
         Back
-      </button>
+      </motion.button>
 
-      <header className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+      <motion.header 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl relative overflow-hidden"
+      >
         <div className="flex items-start justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4">
             <div className="p-4 bg-zinc-950 rounded-xl border border-zinc-800">
@@ -87,7 +94,9 @@ export default function ItemDetail() {
                 {item.url && (
                   <>
                     <span>•</span>
-                    <a 
+                    <motion.a 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       href={item.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
@@ -95,32 +104,47 @@ export default function ItemDetail() {
                     >
                       <ExternalLink className="w-4 h-4" />
                       View Original
-                    </a>
+                    </motion.a>
                   </>
                 )}
               </div>
             </div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {item.type === 'image' && item.url && (
-        <div className="rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-800 shadow-xl">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-800 shadow-xl"
+        >
           <img src={item.url} alt={item.title} className="w-full h-auto max-h-[600px] object-contain" referrerPolicy="no-referrer" />
-        </div>
+        </motion.div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-2 space-y-8"
+        >
           <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl">
             <h2 className="text-xl font-semibold mb-4 text-zinc-100">Content</h2>
             <div className="prose prose-invert max-w-none text-zinc-300 whitespace-pre-wrap leading-relaxed">
               {item.content}
             </div>
           </section>
-        </div>
+        </motion.div>
 
-        <div className="space-y-8">
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-8"
+        >
           {item.explanation && (
             <section className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
@@ -158,7 +182,7 @@ export default function ItemDetail() {
               </div>
             </section>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

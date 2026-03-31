@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToGraphData } from '../services/db';
 import ForceGraph2D from 'react-force-graph-2d';
+import { motion } from 'motion/react';
 
 export default function GraphView() {
   const { user } = useAuth();
@@ -54,7 +55,13 @@ export default function GraphView() {
         <p className="text-zinc-400">Visualize connections between your saved items.</p>
       </header>
 
-      <div ref={containerRef} className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden relative">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        ref={containerRef} 
+        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden relative shadow-xl"
+      >
         {graphData.nodes.length > 0 ? (
           <ForceGraph2D
             width={dimensions.width}
@@ -74,7 +81,7 @@ export default function GraphView() {
             Add items to see your knowledge graph.
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

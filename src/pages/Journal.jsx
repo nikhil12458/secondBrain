@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { saveItem } from '../services/db';
 import { Mic, MicOff, Loader2, Save, RefreshCw } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export default function Journal() {
   const { user } = useAuth();
@@ -102,14 +103,18 @@ export default function Journal() {
         <p className="text-zinc-400">Speak your thoughts and save them directly to your second brain.</p>
       </header>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl flex flex-col gap-6"
+      >
         <div>
           <label className="block text-sm font-medium text-zinc-400 mb-2">Entry Title</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 text-lg font-medium"
+            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 text-lg font-medium transition-shadow"
             placeholder="Journal Title..."
           />
         </div>
@@ -118,14 +123,16 @@ export default function Journal() {
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-zinc-400">Transcript</label>
             <div className="flex gap-2">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handleClear}
                 disabled={!transcript || isListening}
                 className="text-zinc-500 hover:text-zinc-300 transition-colors p-2 disabled:opacity-50"
                 title="Clear transcript"
               >
                 <RefreshCw className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
           </div>
           
@@ -134,20 +141,26 @@ export default function Journal() {
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
               placeholder="Click the microphone and start speaking..."
-              className="w-full h-full min-h-[300px] bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 resize-y text-lg leading-relaxed"
+              className="w-full h-full min-h-[300px] bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 resize-y text-lg leading-relaxed transition-shadow"
             />
             
             {isListening && (
-              <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500/20 text-red-500 px-3 py-1.5 rounded-full text-sm font-medium animate-pulse">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="absolute top-4 right-4 flex items-center gap-2 bg-red-500/20 text-red-500 px-3 py-1.5 rounded-full text-sm font-medium animate-pulse"
+              >
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 Listening...
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={toggleListening}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
               isListening 
@@ -164,9 +177,11 @@ export default function Journal() {
                 <Mic className="w-5 h-5" /> Start Dictation
               </>
             )}
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleSave}
             disabled={!transcript.trim() || saving || isListening}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/20"
@@ -180,9 +195,9 @@ export default function Journal() {
                 <Save className="w-5 h-5" /> Save to Brain
               </>
             )}
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

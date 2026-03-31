@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPublicCollection } from '../services/db';
 import { Loader2, ExternalLink, FileText, Video, Image as ImageIcon, File, Hash, MessageSquare, Sparkles, Mic } from 'lucide-react';
+import { motion } from 'motion/react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
@@ -58,16 +59,25 @@ export default function PublicCollection() {
   return (
     <div className="min-h-screen bg-black text-zinc-100 p-6 md:p-12">
       <div className="max-w-4xl mx-auto space-y-8">
-        <header className="border-b border-zinc-800 pb-8">
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="border-b border-zinc-800 pb-8"
+        >
           <h1 className="text-4xl font-bold tracking-tight mb-4">{collection.name}</h1>
           {collection.description && (
             <p className="text-xl text-zinc-400">{collection.description}</p>
           )}
-        </header>
+        </motion.header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {items.map(item => (
-            <div 
+          {items.map((item, index) => (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ y: -4, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               key={item.id} 
               onClick={() => navigate(`/item/${item.id}`)}
               className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col hover:border-zinc-700 transition-colors cursor-pointer"
@@ -80,7 +90,9 @@ export default function PublicCollection() {
                   <h3 className="font-semibold text-lg line-clamp-2">{item.title}</h3>
                 </div>
                 {item.url && (
-                  <a
+                  <motion.a
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -88,7 +100,7 @@ export default function PublicCollection() {
                     className="text-zinc-500 hover:text-zinc-300 transition-colors"
                   >
                     <ExternalLink className="w-5 h-5" />
-                  </a>
+                  </motion.a>
                 )}
               </div>
               
@@ -98,17 +110,23 @@ export default function PublicCollection() {
 
               {item.explanation && (
                 <div className="mb-4" onClick={(e) => e.stopPropagation()}>
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={(e) => { e.stopPropagation(); setExpandedExplanation(expandedExplanation === item.id ? null : item.id); }}
                     className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
                   >
                     <Sparkles className="w-3 h-3" />
                     {expandedExplanation === item.id ? 'Hide AI Explanation' : 'Explain with AI'}
-                  </button>
+                  </motion.button>
                   {expandedExplanation === item.id && (
-                    <div className="mt-2 p-3 bg-indigo-900/20 border border-indigo-500/20 rounded-lg text-sm text-indigo-200/90 leading-relaxed">
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-2 p-3 bg-indigo-900/20 border border-indigo-500/20 rounded-lg text-sm text-indigo-200/90 leading-relaxed"
+                    >
                       {item.explanation}
-                    </div>
+                    </motion.div>
                   )}
                 </div>
               )}
@@ -123,13 +141,17 @@ export default function PublicCollection() {
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           ))}
           
           {items.length === 0 && (
-            <div className="col-span-full flex items-center justify-center h-64 border-2 border-dashed border-zinc-800 rounded-xl text-zinc-500">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="col-span-full flex items-center justify-center h-64 border-2 border-dashed border-zinc-800 rounded-xl text-zinc-500"
+            >
               <p>This collection is empty.</p>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>

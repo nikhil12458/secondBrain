@@ -5,6 +5,7 @@ import { createChatSession } from '../services/mistral';
 import { differenceInMonths, differenceInDays } from 'date-fns';
 import { Send, Bot, User, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function Chat() {
   const { user } = useAuth();
@@ -140,74 +141,104 @@ export default function Chat() {
           </h1>
           <p className="text-zinc-400">Chat with your second brain. Ask questions, find connections, or revisit old memories.</p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setShowClearConfirm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors text-sm font-medium"
         >
           <Trash2 className="w-4 h-4" />
           Clear Chat
-        </button>
+        </motion.button>
       </header>
 
-      {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-zinc-100 mb-2">Clear Chat History?</h3>
-            <p className="text-zinc-400 mb-6">
-              Are you sure you want to clear your entire conversation history? This cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 text-zinc-300 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleClearChat}
-                className="px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors font-medium"
-              >
-                Clear History
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col shadow-xl">
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {msg.role === 'model' && (
-                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Bot className="w-5 h-5 text-indigo-400" />
-                </div>
-              )}
-              
-              <div className={`max-w-[80%] rounded-2xl px-5 py-3 ${
-                msg.role === 'user' 
-                  ? 'bg-indigo-600 text-white rounded-tr-sm' 
-                  : 'bg-zinc-800 text-zinc-100 rounded-tl-sm'
-              }`}>
-                {msg.role === 'model' ? (
-                  <div className="prose prose-invert prose-sm max-w-none">
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
-                )}
+      <AnimatePresence>
+        {showClearConfirm && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full shadow-2xl"
+            >
+              <h3 className="text-xl font-bold text-zinc-100 mb-2">Clear Chat History?</h3>
+              <p className="text-zinc-400 mb-6">
+                Are you sure you want to clear your entire conversation history? This cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="px-4 py-2 text-zinc-300 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearChat}
+                  className="px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors font-medium"
+                >
+                  Clear History
+                </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {msg.role === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center flex-shrink-0 mt-1">
-                  <User className="w-5 h-5 text-zinc-300" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col shadow-xl"
+      >
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <AnimatePresence initial={false}>
+            {messages.map((msg, idx) => (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                key={idx} 
+                className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {msg.role === 'model' && (
+                  <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                    <Bot className="w-5 h-5 text-indigo-400" />
+                  </div>
+                )}
+                
+                <div className={`max-w-[80%] rounded-2xl px-5 py-3 ${
+                  msg.role === 'user' 
+                    ? 'bg-indigo-600 text-white rounded-tr-sm' 
+                    : 'bg-zinc-800 text-zinc-100 rounded-tl-sm'
+                }`}>
+                  {msg.role === 'model' ? (
+                    <div className="prose prose-invert prose-sm max-w-none">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {msg.role === 'user' && (
+                  <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center flex-shrink-0 mt-1">
+                    <User className="w-5 h-5 text-zinc-300" />
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
           
           {sending && (
-            <div className="flex gap-4 justify-start">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-4 justify-start"
+            >
               <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-1">
                 <Bot className="w-5 h-5 text-indigo-400" />
               </div>
@@ -216,7 +247,7 @@ export default function Chat() {
                 <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-            </div>
+            </motion.div>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -228,19 +259,21 @@ export default function Chat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about your saved items..."
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-4 pr-12 py-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-4 pr-12 py-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner transition-shadow"
               disabled={sending}
             />
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               type="submit"
               disabled={!input.trim() || sending}
               className="absolute right-2 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5" />
-            </button>
+            </motion.button>
           </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
