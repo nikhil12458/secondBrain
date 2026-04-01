@@ -35,9 +35,12 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('Starting Google Sign In...');
       setError('');
       await signInWithGoogle();
+      console.log('Google Sign In successful');
     } catch (err) {
+      console.error('Google Sign In error:', err);
       setError(err.message || 'Failed to sign in with Google');
     }
   };

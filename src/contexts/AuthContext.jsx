@@ -29,38 +29,49 @@ export function AuthProvider({ children }) {
     trackVisit();
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        let data = null;
-        if (!userSnap.exists()) {
-          data = {
-            uid: currentUser.uid,
-            email: currentUser.email,
-            displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-            photoURL: currentUser.photoURL || null,
-            role: 'user',
-            permissions: [],
-            disabledFeatures: [],
-            createdAt: serverTimestamp()
-          };
-          await setDoc(userRef, data);
+      try {
+        if (currentUser) {
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userSnap = await getDoc(userRef);
+          let data = null;
+          if (!userSnap.exists()) {
+            data = {
+              uid: currentUser.uid,
+              email: currentUser.email,
+              displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+              photoURL: currentUser.photoURL || null,
+              role: 'user',
+              permissions: [],
+              disabledFeatures: [],
+              createdAt: serverTimestamp()
+            };
+            await setDoc(userRef, data);
+          } else {
+            data = userSnap.data();
+          }
+          
+          // If the user is the default admin, ensure they have the admin role
+          if (currentUser.email === 'ektak144@gmail.com' && currentUser.emailVerified && data.role !== 'admin') {
+            try {
+              await updateDoc(userRef, { role: 'admin' });
+              data.role = 'admin';
+            } catch (adminErr) {
+              console.error('Failed to auto-upgrade to admin:', adminErr);
+            }
+          }
+          
+          setUserDetails(data);
         } else {
-          data = userSnap.data();
+          setUserDetails(null);
         }
-        
-        // If the user is the default admin, ensure they have the admin role
-        if (currentUser.email === 'ektak144@gmail.com' && currentUser.emailVerified && data.role !== 'admin') {
-          await updateDoc(userRef, { role: 'admin' });
-          data.role = 'admin';
-        }
-        
-        setUserDetails(data);
-      } else {
-        setUserDetails(null);
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Error in onAuthStateChanged:', error);
+        // Set user anyway to avoid infinite loading if Firestore fails
+        setUser(currentUser);
+      } finally {
+        setLoading(false);
       }
-      setUser(currentUser);
-      setLoading(false);
     });
 
     return unsubscribe;
