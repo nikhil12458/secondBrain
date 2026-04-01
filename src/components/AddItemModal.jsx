@@ -126,7 +126,10 @@ export default function AddItemModal({ onClose }) {
           method: 'POST',
           body: formData
         });
-        if (!res.ok) throw new Error('Failed to upload image');
+        if (!res.ok) {
+          if (res.status === 413) throw new Error('Image file is too large (max 50MB)');
+          throw new Error('Failed to upload image');
+        }
         const data = await res.json();
         finalUrl = data.url;
       } else if (type === 'pdf' && imageFile) {
@@ -136,7 +139,10 @@ export default function AddItemModal({ onClose }) {
           method: 'POST',
           body: formData
         });
-        if (!res.ok) throw new Error('Failed to upload PDF');
+        if (!res.ok) {
+          if (res.status === 413) throw new Error('PDF file is too large (max 50MB)');
+          throw new Error('Failed to upload PDF');
+        }
         const data = await res.json();
         finalUrl = data.url;
       }
