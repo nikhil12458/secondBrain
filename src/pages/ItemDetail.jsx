@@ -195,39 +195,18 @@ export default function ItemDetail() {
                 <Sparkles className="w-5 h-5" />
                 AI Explanation
               </h2>
-              <div className="text-indigo-200/90 text-sm leading-relaxed relative z-10">
-                {typeof item.explanation === 'object' ? (
-                  <div className="space-y-2">
-                    {Object.entries(item.explanation).map(([key, value]) => (
-                      <div key={key}>
-                        <span className="font-semibold capitalize">{key.replace(/_/g, ' ')}:</span> {String(value)}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p>{item.explanation}</p>
-                )}
-              </div>
+              <p className="text-indigo-200/90 text-sm leading-relaxed relative z-10">
+                {item.explanation}
+              </p>
             </section>
           )}
 
           {item.summary && (
             <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
               <h2 className="text-lg font-semibold mb-3 text-zinc-100">Summary</h2>
-              <div className="text-zinc-400 text-sm leading-relaxed">
-                {typeof item.summary === 'object' ? (
-                  <div className="space-y-3">
-                    {Object.entries(item.summary).map(([key, value]) => (
-                      <div key={key}>
-                        <h3 className="text-zinc-200 font-medium capitalize mb-1">{key.replace(/_/g, ' ')}</h3>
-                        <p>{String(value)}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p>{item.summary}</p>
-                )}
-              </div>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                {item.summary}
+              </p>
             </section>
           )}
 

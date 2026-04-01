@@ -14,7 +14,6 @@ import Help from './pages/Help';
 import Journal from './pages/Journal';
 import ItemDetail from './pages/ItemDetail';
 import AdminPanel from './pages/AdminPanel';
-import ErrorBoundary from './components/ErrorBoundary';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -33,27 +32,25 @@ function FeatureRoute({ children, feature }) {
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/c/:collectionId" element={<FeatureRoute feature="publicCollections"><PublicCollection /></FeatureRoute>} />
-            <Route path="/shared/item/:itemId" element={<ItemDetail />} />
-            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route index element={<Dashboard />} />
-              <Route path="item/:itemId" element={<ItemDetail />} />
-              <Route path="graph" element={<GraphView />} />
-              <Route path="search" element={<Search />} />
-              <Route path="chat" element={<FeatureRoute feature="aiChat"><Chat /></FeatureRoute>} />
-              <Route path="journal" element={<FeatureRoute feature="voiceJournal"><Journal /></FeatureRoute>} />
-              <Route path="collections" element={<Collections />} />
-              <Route path="help" element={<Help />} />
-              <Route path="malik-admin" element={<AdminPanel />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </ErrorBoundary>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/c/:collectionId" element={<FeatureRoute feature="publicCollections"><PublicCollection /></FeatureRoute>} />
+          <Route path="/shared/item/:itemId" element={<ItemDetail />} />
+          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route index element={<Dashboard />} />
+            <Route path="item/:itemId" element={<ItemDetail />} />
+            <Route path="graph" element={<GraphView />} />
+            <Route path="search" element={<Search />} />
+            <Route path="chat" element={<FeatureRoute feature="aiChat"><Chat /></FeatureRoute>} />
+            <Route path="journal" element={<FeatureRoute feature="voiceJournal"><Journal /></FeatureRoute>} />
+            <Route path="collections" element={<Collections />} />
+            <Route path="help" element={<Help />} />
+            <Route path="malik-admin" element={<AdminPanel />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

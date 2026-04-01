@@ -16,12 +16,10 @@ export function AuthProvider({ children }) {
       if (!sessionStorage.getItem('visitTracked')) {
         try {
           const analyticsRef = doc(db, 'analytics', 'visitors');
-          const snap = await getDoc(analyticsRef);
-          if (snap.exists()) {
-            await updateDoc(analyticsRef, { count: increment(1), lastVisit: serverTimestamp() });
-          } else {
-            await setDoc(analyticsRef, { count: 1, lastVisit: serverTimestamp() });
-          }
+          await setDoc(analyticsRef, { 
+            count: increment(1), 
+            lastVisit: serverTimestamp() 
+          }, { merge: true });
           sessionStorage.setItem('visitTracked', 'true');
         } catch (err) {
           console.error('Failed to track visit', err);

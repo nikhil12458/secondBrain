@@ -33,10 +33,10 @@ app.post("/api/ai/summarize", async (req, res) => {
       
       Provide a JSON response with three fields:
       1. "tags": An array of 3-7 relevant string tags.
-      2. "summary": A highly detailed and comprehensive summary of this {type} as a SINGLE STRING. If it's a video, summarize the expected key points, themes, and narrative of the video based on the title and description. If it's an article, document, or note, provide a thorough breakdown of the main arguments and details. Do not just write 1-2 sentences; be highly descriptive and thorough.
-      3. "explanation": A deep-dive explanation of the resource, its context, and why it is valuable to remember, as a SINGLE STRING.
+      2. "summary": A highly detailed and comprehensive summary of this {type}. If it's a video, summarize the expected key points, themes, and narrative of the video based on the title and description. If it's an article, document, or note, provide a thorough breakdown of the main arguments and details. Do not just write 1-2 sentences; be highly descriptive and thorough.
+      3. "explanation": A deep-dive explanation of the resource, its context, and why it is valuable to remember.
       
-      Return ONLY valid JSON. Ensure "summary" and "explanation" are strings, not objects.
+      Return ONLY valid JSON.
     `);
 
     const chain = prompt.pipe(model).pipe(new StringOutputParser());
@@ -44,30 +44,25 @@ app.post("/api/ai/summarize", async (req, res) => {
     
     // Clean up potential markdown formatting in the response
     const cleanedText = resultText.replace(/^\`\`\`json\n?/, '').replace(/\n?\`\`\`$/, '').trim();
-    let result;
+    let result = {};
     try {
       result = JSON.parse(cleanedText || '{}');
     } catch (e) {
-      console.error('JSON Parse Error:', e, 'Text:', cleanedText);
-      // Fallback: try to extract something if it's not valid JSON
-      result = {
-        tags: [],
-        summary: cleanedText,
-        explanation: ''
-      };
+      console.error('Failed to parse JSON:', e);
     }
     
-    // Ensure summary and explanation are strings to avoid React error #31
-    const formatToString = (val) => {
+    const ensureString = (val) => {
       if (typeof val === 'string') return val;
-      if (typeof val === 'object' && val !== null) return JSON.stringify(val, null, 2);
+      if (typeof val === 'object' && val !== null) {
+        return Object.values(val).map(v => typeof v === 'string' ? v : JSON.stringify(v)).join('\n\n');
+      }
       return String(val || '');
     };
 
     res.json({
       tags: Array.isArray(result.tags) ? result.tags : [],
-      summary: formatToString(result.summary),
-      explanation: formatToString(result.explanation)
+      summary: ensureString(result.summary),
+      explanation: ensureString(result.explanation)
     });
   } catch (error) {
     console.error('Summarize Error:', error);
