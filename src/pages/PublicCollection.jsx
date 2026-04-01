@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPublicCollection } from '../services/db';
-import { Loader2, ExternalLink, FileText, Video, Image as ImageIcon, File, Hash, MessageSquare, Sparkles, Mic } from 'lucide-react';
+import { Loader2, ExternalLink, FileText, Image as ImageIcon, File, Hash, MessageSquare, Sparkles, Mic } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const TypeIcon = ({ type }) => {
   switch (type) {
     case 'article': return <FileText className="w-5 h-5 text-blue-400" />;
-    case 'video': return <Video className="w-5 h-5 text-red-400" />;
     case 'image': return <ImageIcon className="w-5 h-5 text-green-400" />;
     case 'pdf': return <File className="w-5 h-5 text-orange-400" />;
     case 'social': return <MessageSquare className="w-5 h-5 text-pink-400" />;

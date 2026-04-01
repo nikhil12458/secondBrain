@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { saveItem, uploadImage } from '../services/db';
+import { saveItem } from '../services/db';
 import { X, Loader2, Link as LinkIcon, Upload, Mic, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -83,10 +83,10 @@ export default function AddItemModal({ onClose }) {
         
         // Auto-detect type
         const urlLower = url.toLowerCase();
-        if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
-          setType('video');
-        } else if (urlLower.includes('twitter.com') || urlLower.includes('x.com') || urlLower.includes('instagram.com')) {
+        if (urlLower.includes('twitter.com') || urlLower.includes('x.com') || urlLower.includes('instagram.com')) {
           setType('social');
+        } else if (urlLower.endsWith('.pdf')) {
+          setType('pdf');
         } else {
           setType('article');
         }
@@ -104,7 +104,7 @@ export default function AddItemModal({ onClose }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
+      setImageFile(file); // We'll use imageFile state for both image and pdf for simplicity, or rename it later.
       if (!title) {
         setTitle(file.name.split('.')[0]);
       }
@@ -120,7 +120,25 @@ export default function AddItemModal({ onClose }) {
       let finalUrl = url;
       
       if (type === 'image' && imageFile) {
-        finalUrl = await uploadImage(imageFile, user.uid);
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        const res = await fetch('/api/upload/image', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error('Failed to upload image');
+        const data = await res.json();
+        finalUrl = data.url;
+      } else if (type === 'pdf' && imageFile) {
+        const formData = new FormData();
+        formData.append('pdf', imageFile);
+        const res = await fetch('/api/upload/pdf', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error('Failed to upload PDF');
+        const data = await res.json();
+        finalUrl = data.url;
       }
 
       await saveItem(user.uid, {
@@ -186,20 +204,19 @@ export default function AddItemModal({ onClose }) {
                 <option value="note">Note</option>
                 <option value="journal">Voice Journal</option>
                 <option value="article">Article</option>
-                <option value="video">Video</option>
                 <option value="social">Social Media</option>
                 <option value="image">Image</option>
                 <option value="pdf">PDF</option>
               </select>
             </div>
 
-            {type === 'image' ? (
+            {type === 'image' || type === 'pdf' ? (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
               >
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Upload Image</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Upload {type === 'image' ? 'Image' : 'PDF'}</label>
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -208,21 +225,21 @@ export default function AddItemModal({ onClose }) {
                 >
                   <Upload className="w-8 h-8 text-zinc-500 mb-2" />
                   <span className="text-zinc-400 text-sm">
-                    {imageFile ? imageFile.name : 'Click to select an image from your device'}
+                    {imageFile ? imageFile.name : `Click to select a ${type === 'image' ? 'image' : 'PDF'} from your device`}
                   </span>
                   <input 
                     type="file" 
-                    accept="image/*" 
+                    accept={type === 'image' ? "image/*" : "application/pdf"} 
                     className="hidden" 
                     ref={fileInputRef}
                     onChange={handleFileChange}
                   />
                 </motion.div>
-                <div className="mt-2 text-center text-zinc-500 text-xs">Or provide an image URL below</div>
+                <div className="mt-2 text-center text-zinc-500 text-xs">Or provide a URL below</div>
               </motion.div>
             ) : null}
 
-            {type !== 'image' && type !== 'journal' && (
+            {type !== 'image' && type !== 'pdf' && type !== 'journal' && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}

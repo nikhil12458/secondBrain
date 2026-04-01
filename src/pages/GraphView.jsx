@@ -39,7 +39,6 @@ export default function GraphView() {
   const getNodeColor = (type) => {
     switch (type) {
       case 'article': return '#60A5FA'; // blue-400
-      case 'video': return '#F87171'; // red-400
       case 'image': return '#4ADE80'; // green-400
       case 'pdf': return '#FB923C'; // orange-400
       case 'social': return '#F472B6'; // pink-400

@@ -3,6 +3,10 @@ import { ChatMistralAI, MistralAIEmbeddings } from "@langchain/mistralai";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 import dotenv from "dotenv";
+import multer from "multer";
+import ImageKit from "imagekit";
+import path from "path";
+import fs from "fs";
 
 dotenv.config();
 
@@ -11,9 +15,83 @@ const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY || "sDTk9fWN0StnEhPo6B6ufd1w
 const app = express();
 app.use(express.json());
 
+// Set up local storage for PDFs
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// Set up ImageKit
+let imagekit = null;
+if (process.env.IMAGEKIT_PUBLIC_KEY && process.env.IMAGEKIT_PRIVATE_KEY && process.env.IMAGEKIT_URL_ENDPOINT) {
+  imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+  });
+}
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(uploadDir));
+
 // API routes
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
+});
+
+app.post("/api/upload/pdf", upload.single('pdf'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    // Return the local URL for the PDF
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl, filename: req.file.originalname });
+  } catch (error) {
+    console.error('PDF Upload Error:', error);
+    res.status(500).json({ error: 'Failed to upload PDF' });
+  }
+});
+
+app.post("/api/upload/image", upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    if (!imagekit) {
+      return res.status(500).json({ error: 'ImageKit credentials not configured' });
+    }
+
+    // Read the file from local storage to upload to ImageKit
+    const fileBuffer = fs.readFileSync(req.file.path);
+    
+    const response = await imagekit.upload({
+      file: fileBuffer,
+      fileName: req.file.filename,
+      folder: '/second-brain-images'
+    });
+
+    // Optionally delete the local file after uploading to ImageKit
+    fs.unlinkSync(req.file.path);
+
+    res.json({ url: response.url, fileId: response.fileId });
+  } catch (error) {
+    console.error('Image Upload Error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
 });
 
 app.post("/api/ai/summarize", async (req, res) => {
@@ -33,7 +111,7 @@ app.post("/api/ai/summarize", async (req, res) => {
       
       Provide a JSON response with three fields:
       1. "tags": An array of 3-7 relevant string tags.
-      2. "summary": A highly detailed and comprehensive summary of this {type}. If it's a video, summarize the expected key points, themes, and narrative of the video based on the title and description. If it's an article, document, or note, provide a thorough breakdown of the main arguments and details. Do not just write 1-2 sentences; be highly descriptive and thorough.
+      2. "summary": A highly detailed and comprehensive summary of this {type}. If it's an article, document, or note, provide a thorough breakdown of the main arguments and details. Do not just write 1-2 sentences; be highly descriptive and thorough.
       3. "explanation": A deep-dive explanation of the resource, its context, and why it is valuable to remember.
       
       Return ONLY valid JSON.
@@ -103,7 +181,7 @@ app.post("/api/ai/chat", async (req, res) => {
     });
 
     const systemInstruction = `You are a helpful AI assistant for the user's "Second Brain" application. 
-The user has saved various items (notes, articles, videos, images, etc.) in their second brain.
+The user has saved various items (notes, articles, pdfs, images, etc.) in their second brain.
 Here is the current list of their saved items:
 
 ${context}

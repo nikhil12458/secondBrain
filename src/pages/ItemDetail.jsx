@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getItem, toggleItemPublic } from '../services/db';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, Loader2, ArrowLeft, Mic, Hash, Share2, Check, Globe, Lock } from 'lucide-react';
+import { FileText, Image as ImageIcon, File, StickyNote, ExternalLink, Sparkles, MessageCircle, Loader2, ArrowLeft, Mic, Hash, Share2, Check, Globe, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'motion/react';
 import AIActions from '../components/AIActions';
@@ -10,7 +10,6 @@ import AIActions from '../components/AIActions';
 const TypeIcon = ({ type }) => {
   switch (type) {
     case 'article': return <FileText className="w-6 h-6 text-blue-400" />;
-    case 'video': return <Video className="w-6 h-6 text-red-400" />;
     case 'image': return <ImageIcon className="w-6 h-6 text-green-400" />;
     case 'pdf': return <File className="w-6 h-6 text-orange-400" />;
     case 'social': return <MessageCircle className="w-6 h-6 text-pink-400" />;

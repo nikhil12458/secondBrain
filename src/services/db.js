@@ -1,6 +1,5 @@
-import { db, storage } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp, doc, updateDoc, getDoc, writeBatch, documentId, onSnapshot, arrayUnion } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { generateTagsAndSummary, generateEmbeddings } from './ai';
 
 const ensureString = (val) => {
@@ -33,17 +32,6 @@ const formatItem = (doc) => {
     tags: safeTags
   };
 };
-
-export async function uploadImage(file, userId) {
-  if (!file) return null;
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${userId}/${Date.now()}.${fileExt}`;
-  const storageRef = ref(storage, `images/${fileName}`);
-  
-  await uploadBytes(storageRef, file);
-  const downloadURL = await getDownloadURL(storageRef);
-  return downloadURL;
-}
 
 export function subscribeToItems(userId, callback) {
   const q = query(collection(db, 'items'), where('userId', '==', userId), orderBy('createdAt', 'desc'));

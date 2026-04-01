@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { subscribeToItems, subscribeToCollections, addItemToCollection, toggleItemPublic } from '../services/db';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
-import { FileText, Image as ImageIcon, Video, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2, RefreshCw, Share2, Check } from 'lucide-react';
+import { FileText, Image as ImageIcon, File, StickyNote, ExternalLink, Sparkles, MessageCircle, FolderPlus, Loader2, Mic, Trash2, Edit2, RefreshCw, Share2, Check } from 'lucide-react';
 import EditItemModal from '../components/EditItemModal';
 import { deleteItem } from '../services/db';
 import { motion } from 'motion/react';
@@ -11,7 +11,6 @@ import { motion } from 'motion/react';
 const TypeIcon = ({ type }) => {
   switch (type) {
     case 'article': return <FileText className="w-5 h-5 text-blue-400" />;
-    case 'video': return <Video className="w-5 h-5 text-red-400" />;
     case 'image': return <ImageIcon className="w-5 h-5 text-green-400" />;
     case 'pdf': return <File className="w-5 h-5 text-orange-400" />;
     case 'social': return <MessageCircle className="w-5 h-5 text-pink-400" />;
