@@ -1,4 +1,5 @@
 import { generateEmbeddings } from './ai';
+import { chatWithContext } from './mistralService';
 
 function cosineSimilarity(vecA, vecB) {
   let dotProduct = 0;
@@ -6,7 +7,7 @@ function cosineSimilarity(vecA, vecB) {
   let normB = 0;
   for (let i = 0; i < vecA.length; i++) {
     dotProduct += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i];
+    normA += vecA[i] * vecB[i];
     normB += vecB[i] * vecB[i];
   }
   if (normA === 0 || normB === 0) return 0;
@@ -53,23 +54,13 @@ Tags: ${(item.tags || []).join(', ')}
 URL: ${item.url || 'N/A'}
 `).join('\n---\n');
 
-        const response = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, context, history })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
+        const text = await chatWithContext(message, context, history);
         
         // Update history
         history.push({ role: 'user', text: message });
-        history.push({ role: 'model', text: data.text });
+        history.push({ role: 'model', text: text });
         
-        return { text: data.text };
+        return { text };
       } catch (error) {
         console.error('Chat Error:', error);
         throw error;

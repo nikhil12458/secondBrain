@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Loader2, FileText, Share2, PenTool, BookOpen, Twitter, Linkedin, GraduationCap, Network } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { generateContent } from '../services/mistralService';
 import Markdown from 'react-markdown';
 
 export default function AIActions({ item }) {
@@ -15,8 +15,6 @@ export default function AIActions({ item }) {
     setGeneratedContent('');
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
       const fullPrompt = `
         Based on the following content titled "${item.title}":
         
@@ -25,12 +23,8 @@ export default function AIActions({ item }) {
         ${prompt}
       `;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: fullPrompt,
-      });
-
-      setGeneratedContent(response.text);
+      const text = await generateContent(fullPrompt);
+      setGeneratedContent(text);
     } catch (error) {
       console.error('AI Generation Error:', error);
       setGeneratedContent('Failed to generate content. Please try again.');

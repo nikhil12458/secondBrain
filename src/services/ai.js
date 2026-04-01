@@ -1,16 +1,8 @@
+import { summarizeContent, getEmbeddings } from './mistralService';
+
 export async function generateTagsAndSummary(content, type, title, url) {
   try {
-    const response = await fetch('/api/ai/summarize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, type, title, url })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.statusText}`);
-    }
-
-    const result = await response.json();
+    const result = await summarizeContent(content, type, title, url);
     
     return {
       tags: result.tags || [],
@@ -25,18 +17,8 @@ export async function generateTagsAndSummary(content, type, title, url) {
 
 export async function generateEmbeddings(text) {
   try {
-    const response = await fetch('/api/ai/embed', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.embedding || [];
+    const result = await getEmbeddings(text);
+    return result || [];
   } catch (error) {
     console.error('Embedding Error:', error);
     return [];
