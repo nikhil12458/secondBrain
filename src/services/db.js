@@ -3,6 +3,37 @@ import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp, do
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { generateTagsAndSummary, generateEmbeddings } from './ai';
 
+const ensureString = (val) => {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    return Object.values(val).map(v => typeof v === 'string' ? v : JSON.stringify(v)).join('\n\n');
+  }
+  return String(val);
+};
+
+const formatItem = (doc) => {
+  const data = doc.data();
+  
+  // Ensure tags is an array of strings
+  let safeTags = [];
+  if (Array.isArray(data.tags)) {
+    safeTags = data.tags.map(t => typeof t === 'string' ? t : JSON.stringify(t));
+  }
+
+  return {
+    id: doc.id,
+    ...data,
+    title: ensureString(data.title),
+    summary: ensureString(data.summary),
+    explanation: ensureString(data.explanation),
+    content: ensureString(data.content),
+    type: ensureString(data.type),
+    url: data.url ? ensureString(data.url) : undefined,
+    tags: safeTags
+  };
+};
+
 export async function uploadImage(file, userId) {
   if (!file) return null;
   const fileExt = file.name.split('.').pop();
@@ -17,7 +48,7 @@ export async function uploadImage(file, userId) {
 export function subscribeToItems(userId, callback) {
   const q = query(collection(db, 'items'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   return onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const items = snapshot.docs.map(formatItem);
     callback(items);
   }, (error) => {
     console.error("Error subscribing to items:", error);
@@ -27,7 +58,15 @@ export function subscribeToItems(userId, callback) {
 export function subscribeToCollections(userId, callback) {
   const q = query(collection(db, 'collections'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   return onSnapshot(q, (snapshot) => {
-    const collections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const collections = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        name: ensureString(data.name),
+        description: ensureString(data.description)
+      };
+    });
     callback(collections);
   }, (error) => {
     console.error("Error subscribing to collections:", error);
@@ -51,7 +90,7 @@ export function subscribeToGraphData(userId, callback) {
   };
 
   const unsubItems = onSnapshot(itemsQ, (snapshot) => {
-    items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    items = snapshot.docs.map(formatItem);
     itemsLoaded = true;
     updateGraph();
   });
@@ -169,7 +208,7 @@ export async function saveItem(userId, data) {
 export async function getItems(userId) {
   const q = query(collection(db, 'items'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map(formatItem);
 }
 
 export async function getGraphData(userId) {
@@ -180,7 +219,7 @@ export async function getGraphData(userId) {
   
   const nodes = itemsSnap.docs.map(doc => {
     const data = doc.data();
-    return { id: doc.id, name: data.title, val: 1, group: data.type };
+    return { id: doc.id, name: ensureString(data.title), val: 1, group: ensureString(data.type) };
   });
   
   const links = relationsSnap.docs.map(doc => {
@@ -194,7 +233,15 @@ export async function getGraphData(userId) {
 export async function getCollections(userId) {
   const q = query(collection(db, 'collections'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      name: ensureString(data.name),
+      description: ensureString(data.description)
+    };
+  });
 }
 
 export async function createCollection(userId, name, description) {
@@ -267,7 +314,7 @@ export async function getItem(itemId) {
   const { doc, getDoc } = await import('firebase/firestore');
   const docSnap = await getDoc(doc(db, 'items', itemId));
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() };
+    return formatItem(docSnap);
   }
   throw new Error('Item not found');
 }
@@ -309,7 +356,13 @@ export async function getPublicCollection(collectionId) {
     throw new Error('Collection not found or not public');
   }
   
-  const collectionData = { id: collectionSnap.id, ...collectionSnap.data() };
+  const data = collectionSnap.data();
+  const collectionData = { 
+    id: collectionSnap.id, 
+    ...data,
+    name: ensureString(data.name),
+    description: ensureString(data.description)
+  };
   
   let items = [];
   if (collectionData.itemIds && collectionData.itemIds.length > 0) {
@@ -320,7 +373,7 @@ export async function getPublicCollection(collectionId) {
       const chunk = itemIds.slice(i, i + chunkSize);
       const itemsQ = query(collection(db, 'items'), where(documentId(), 'in', chunk));
       const itemsSnap = await getDocs(itemsQ);
-      const chunkItems = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const chunkItems = itemsSnap.docs.map(formatItem);
       items = [...items, ...chunkItems];
     }
   }

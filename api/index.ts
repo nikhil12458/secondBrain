@@ -59,8 +59,13 @@ app.post("/api/ai/summarize", async (req, res) => {
       return String(val || '');
     };
 
+    let safeTags = [];
+    if (Array.isArray(result.tags)) {
+      safeTags = result.tags.map(t => typeof t === 'string' ? t : JSON.stringify(t));
+    }
+
     res.json({
-      tags: Array.isArray(result.tags) ? result.tags : [],
+      tags: safeTags,
       summary: ensureString(result.summary),
       explanation: ensureString(result.explanation)
     });
