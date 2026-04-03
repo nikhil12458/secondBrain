@@ -120,6 +120,7 @@ export default function AddItemModal({ onClose }) {
     try {
       let finalUrl = url;
       let finalContent = content;
+      let localPath = null;
       
       if (type === 'image' && imageFile) {
         const formData = new FormData();
@@ -134,6 +135,7 @@ export default function AddItemModal({ onClose }) {
         }
         const data = await res.json();
         finalUrl = data.url;
+        localPath = data.localPath;
         
         // Extract content from image and append it
         const extracted = await parseFile(finalUrl, 'image');
@@ -153,6 +155,7 @@ export default function AddItemModal({ onClose }) {
         }
         const data = await res.json();
         finalUrl = data.url;
+        localPath = data.localPath;
         
         // Extract content from PDF and append it
         const extracted = await parseFile(finalUrl, 'pdf');
@@ -166,6 +169,7 @@ export default function AddItemModal({ onClose }) {
         title,
         content: finalContent,
         url: finalUrl || undefined,
+        localPath,
       });
       onClose();
     } catch (error) {

@@ -5,6 +5,7 @@ import ImageKit from "imagekit";
 import path from "path";
 import fs from "fs";
 import os from "os";
+import { RAGService } from "./ragService";
 
 dotenv.config();
 
@@ -56,9 +57,13 @@ app.post("/api/upload/pdf", upload.single('pdf'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    // Return the local URL for the PDF
+    // Return the local URL and the local path for processing
     const fileUrl = `/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl, filename: req.file.originalname });
+    res.json({ 
+      url: fileUrl, 
+      filename: req.file.originalname,
+      localPath: req.file.path 
+    });
   } catch (error) {
     console.error('PDF Upload Error:', error);
     res.status(500).json({ error: 'Failed to upload PDF' });
@@ -71,28 +76,47 @@ app.post("/api/upload/image", upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    if (!imagekit) {
-      // Fallback to local storage if ImageKit is not configured
-      const fileUrl = `/uploads/${req.file.filename}`;
-      return res.json({ url: fileUrl, filename: req.file.originalname });
+    const localPath = req.file.path;
+    let url = `/uploads/${req.file.filename}`;
+
+    if (imagekit) {
+      // Read the file from local storage to upload to ImageKit
+      const fileBuffer = fs.readFileSync(req.file.path);
+      
+      const response = await imagekit.upload({
+        file: fileBuffer,
+        fileName: req.file.filename,
+        folder: '/second-brain-images'
+      });
+      url = response.url;
     }
 
-    // Read the file from local storage to upload to ImageKit
-    const fileBuffer = fs.readFileSync(req.file.path);
-    
-    const response = await imagekit.upload({
-      file: fileBuffer,
-      fileName: req.file.filename,
-      folder: '/second-brain-images'
+    res.json({ 
+      url: url, 
+      filename: req.file.originalname,
+      localPath: localPath 
     });
-
-    // Optionally delete the local file after uploading to ImageKit
-    fs.unlinkSync(req.file.path);
-
-    res.json({ url: response.url, fileId: response.fileId });
   } catch (error) {
     console.error('Image Upload Error:', error);
     res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
+app.post("/api/generate-post", async (req, res) => {
+  const { localPath, query } = req.body;
+
+  if (!localPath || !query) {
+    return res.status(400).json({ error: 'Missing localPath or query' });
+  }
+
+  try {
+    const ragService = new RAGService();
+    await ragService.processDocument(localPath);
+    const result = await ragService.generateLinkedInPost(query);
+    res.json({ result });
+  } catch (error: any) {
+    console.error('RAG Generation Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate post' });
   }
 });
 

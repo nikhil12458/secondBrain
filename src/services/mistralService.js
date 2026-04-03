@@ -111,3 +111,26 @@ export async function generateContent(prompt) {
     throw error;
   }
 }
+
+export async function generateRAGContent(localPath, query) {
+  try {
+    const response = await fetch('/api/generate-post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ localPath, query }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to generate RAG content');
+    }
+
+    const data = await response.json();
+    return data.result;
+  } catch (error) {
+    console.error("Mistral RAG Generation Error:", error);
+    throw error;
+  }
+}

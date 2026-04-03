@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Loader2, FileText, Share2, PenTool, BookOpen, Twitter, Linkedin, GraduationCap, Network } from 'lucide-react';
-import { generateContent } from '../services/mistralService';
+import { generateContent, generateRAGContent } from '../services/mistralService';
 import Markdown from 'react-markdown';
 
 export default function AIActions({ item }) {
@@ -15,18 +15,25 @@ export default function AIActions({ item }) {
     setGeneratedContent('');
 
     try {
-      const fullPrompt = `
-        Based on the following content titled "${item.title}":
-        
-        Content: ${item.content || 'N/A'}
-        Summary: ${item.summary || 'N/A'}
-        Explanation: ${item.explanation || 'N/A'}
-        Type: ${item.type}
-        
-        ${prompt}
-      `;
+      let text = '';
+      if (item.localPath) {
+        // Use RAG if we have a local file path
+        text = await generateRAGContent(item.localPath, prompt);
+      } else {
+        // Fallback to standard prompt if no local file
+        const fullPrompt = `
+          Based on the following content titled "${item.title}":
+          
+          Content: ${item.content || 'N/A'}
+          Summary: ${item.summary || 'N/A'}
+          Explanation: ${item.explanation || 'N/A'}
+          Type: ${item.type}
+          
+          ${prompt}
+        `;
 
-      const text = await generateContent(fullPrompt);
+        text = await generateContent(fullPrompt);
+      }
       setGeneratedContent(text);
     } catch (error) {
       console.error('AI Generation Error:', error);

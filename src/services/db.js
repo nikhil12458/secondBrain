@@ -111,6 +111,7 @@ export async function saveItem(userId, data) {
       summary: aiData.summary || '',
       explanation: aiData.explanation || '',
       embedding: embedding || [],
+      localPath: data.localPath || null,
       createdAt: serverTimestamp(),
     };
 
