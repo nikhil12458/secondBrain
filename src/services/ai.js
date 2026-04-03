@@ -1,10 +1,25 @@
 import { summarizeContent, getEmbeddings } from './mistralService';
 import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let genAI = null;
+
+function getGenAI() {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.warn("GEMINI_API_KEY is missing. File parsing may not work.");
+      return null;
+    }
+    genAI = new GoogleGenAI({ apiKey });
+  }
+  return genAI;
+}
 
 export async function parseFile(fileUrl, type) {
   try {
+    const ai = getGenAI();
+    if (!ai) throw new Error("Gemini client not initialized");
+
     const model = "gemini-3-flash-preview";
     const response = await fetch(fileUrl);
     const blob = await response.blob();

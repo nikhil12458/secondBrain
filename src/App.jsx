@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SocketProvider } from './contexts/SocketContext';
 import { useFeatures } from './hooks/useFeatures';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
@@ -33,24 +34,26 @@ function FeatureRoute({ children, feature }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/c/:collectionId" element={<FeatureRoute feature="publicCollections"><PublicCollection /></FeatureRoute>} />
-          <Route path="/shared/item/:itemId" element={<ItemDetail />} />
-          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-            <Route index element={<Dashboard />} />
-            <Route path="item/:itemId" element={<ItemDetail />} />
-            <Route path="graph" element={<GraphView />} />
-            <Route path="search" element={<Search />} />
-            <Route path="chat" element={<FeatureRoute feature="aiChat"><Chat /></FeatureRoute>} />
-            <Route path="journal" element={<FeatureRoute feature="voiceJournal"><Journal /></FeatureRoute>} />
-            <Route path="collections" element={<Collections />} />
-            <Route path="help" element={<Help />} />
-            <Route path="malik-admin" element={<AdminPanel />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <SocketProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/c/:collectionId" element={<FeatureRoute feature="publicCollections"><PublicCollection /></FeatureRoute>} />
+            <Route path="/shared/item/:itemId" element={<ItemDetail />} />
+            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="item/:itemId" element={<ItemDetail />} />
+              <Route path="graph" element={<GraphView />} />
+              <Route path="search" element={<Search />} />
+              <Route path="chat" element={<FeatureRoute feature="aiChat"><Chat /></FeatureRoute>} />
+              <Route path="journal" element={<FeatureRoute feature="voiceJournal"><Journal /></FeatureRoute>} />
+              <Route path="collections" element={<Collections />} />
+              <Route path="help" element={<Help />} />
+              <Route path="malik-admin" element={<AdminPanel />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 }

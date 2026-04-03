@@ -1,10 +1,24 @@
 import { Mistral } from '@mistralai/mistralai';
 
-const apiKey = process.env.MISTRAL_API_KEY;
-const client = new Mistral({ apiKey });
+let mistralClient = null;
+
+function getMistralClient() {
+  if (!mistralClient) {
+    const apiKey = process.env.MISTRAL_API_KEY;
+    if (!apiKey) {
+      console.warn("MISTRAL_API_KEY is missing. AI features may not work.");
+      return null;
+    }
+    mistralClient = new Mistral({ apiKey });
+  }
+  return mistralClient;
+}
 
 export async function summarizeContent(content, type, title, url) {
   try {
+    const client = getMistralClient();
+    if (!client) throw new Error("Mistral client not initialized");
+
     const prompt = `Analyze the provided ${type} titled "${title}".
 URL: ${url || 'None provided'}
 Content/Description: ${content}
@@ -32,6 +46,9 @@ Return ONLY valid JSON.`;
 
 export async function getEmbeddings(text) {
   try {
+    const client = getMistralClient();
+    if (!client) throw new Error("Mistral client not initialized");
+
     const response = await client.embeddings.create({
       model: "mistral-embed",
       inputs: [text]
@@ -45,6 +62,9 @@ export async function getEmbeddings(text) {
 
 export async function chatWithContext(message, context, history) {
   try {
+    const client = getMistralClient();
+    if (!client) throw new Error("Mistral client not initialized");
+
     const systemPrompt = `You are a helpful AI assistant for the user's "Second Brain" application. 
 The user has saved various items (notes, articles, pdfs, images, etc.) in their second brain.
 Here is the current list of their saved items:
@@ -78,6 +98,9 @@ If they ask about an old item, be conversational and helpful.`;
 
 export async function generateContent(prompt) {
   try {
+    const client = getMistralClient();
+    if (!client) throw new Error("Mistral client not initialized");
+
     const response = await client.chat.complete({
       model: "mistral-large-latest",
       messages: [{ role: "user", content: prompt }]

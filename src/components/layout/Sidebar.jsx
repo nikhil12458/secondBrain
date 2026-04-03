@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSocket } from '../../contexts/SocketContext';
 import { useFeatures } from '../../hooks/useFeatures';
 import { Brain, Search, Network, Folder, LogOut, Plus, HelpCircle, MessageSquare, Mic, Shield } from 'lucide-react';
 import AddItemModal from '../AddItemModal';
@@ -10,6 +11,7 @@ const MotionNavLink = motion(NavLink);
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, userDetails, logout } = useAuth();
+  const { isConnected } = useSocket();
   const { isFeatureEnabled } = useFeatures();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -45,8 +47,12 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col h-full transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 hidden md:flex items-center gap-3">
-          <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center relative">
             <Brain className="w-5 h-5 text-zinc-100" />
+            <div 
+              className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-zinc-900 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}
+              title={isConnected ? 'Real-time connected' : 'Real-time disconnected'}
+            />
           </div>
           <span className="font-semibold text-lg tracking-tight">Second Brain</span>
         </div>
