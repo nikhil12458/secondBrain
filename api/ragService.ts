@@ -84,16 +84,23 @@ export class RAGService {
     const retriever = this.vectorStore.asRetriever();
 
     const prompt = PromptTemplate.fromTemplate(`
-You are an AI assistant.
+### ROLE
+You are a strict Knowledge Retrieval Assistant. 
 
-ONLY use the provided context.
-Do NOT generate anything outside context.
+### CONSTRAINTS
+1. ONLY use the information provided in the "CONTEXT" section below.
+2. If the information required to complete the TASK is not in the CONTEXT, say: "The provided document does not contain this information."
+3. Do NOT use your own internal training data or general knowledge.
+4. Do NOT use generic marketing fluff or introductory phrases.
+5. Maintain the tone of the original content.
 
-Context:
+### CONTEXT
 {context}
 
-Task:
+### TASK
 {query}
+
+### RESPONSE
     `);
 
     const formatDocs = (docs: any[]) => docs.map((doc) => doc.pageContent).join("\n\n");

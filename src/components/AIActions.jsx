@@ -22,14 +22,27 @@ export default function AIActions({ item }) {
       } else {
         // Fallback to standard prompt if no local file
         const fullPrompt = `
-          Based on the following content titled "${item.title}":
-          
-          Content: ${item.content || 'N/A'}
-          Summary: ${item.summary || 'N/A'}
-          Explanation: ${item.explanation || 'N/A'}
-          Type: ${item.type}
-          
-          ${prompt}
+### ROLE
+You are a strict Knowledge Retrieval Assistant. 
+
+### CONSTRAINTS
+1. ONLY use the information provided in the "CONTEXT" section below.
+2. If the information required to complete the TASK is not in the CONTEXT, say: "The provided document does not contain this information."
+3. Do NOT use your own internal training data or general knowledge.
+4. Do NOT use generic marketing fluff or introductory phrases.
+5. Maintain the tone of the original content.
+
+### CONTEXT
+Title: ${item.title}
+Content: ${item.content || 'N/A'}
+Summary: ${item.summary || 'N/A'}
+Explanation: ${item.explanation || 'N/A'}
+Type: ${item.type}
+
+### TASK
+${prompt}
+
+### RESPONSE
         `;
 
         text = await generateContent(fullPrompt);
