@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
           }
           
           // If the user is the default admin, ensure they have the admin role
-          if (currentUser.email === 'ektak144@gmail.com' && currentUser.emailVerified && data.role !== 'admin') {
+          if (currentUser.email === 'ektak144@gmail.com' && data.role !== 'admin') {
             try {
               await updateDoc(userRef, { role: 'admin' });
               data.role = 'admin';

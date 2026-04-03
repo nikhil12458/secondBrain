@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { saveItem } from '../services/db';
+import { parseFile } from '../services/ai';
 import { X, Loader2, Link as LinkIcon, Upload, Mic, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -118,6 +119,7 @@ export default function AddItemModal({ onClose }) {
     setLoading(true);
     try {
       let finalUrl = url;
+      let finalContent = content;
       
       if (type === 'image' && imageFile) {
         const formData = new FormData();
@@ -132,6 +134,12 @@ export default function AddItemModal({ onClose }) {
         }
         const data = await res.json();
         finalUrl = data.url;
+        
+        // Extract content from image and append it
+        const extracted = await parseFile(finalUrl, 'image');
+        if (extracted) {
+          finalContent = finalContent ? `${finalContent}\n\n--- Extracted from Image ---\n${extracted}` : extracted;
+        }
       } else if (type === 'pdf' && imageFile) {
         const formData = new FormData();
         formData.append('pdf', imageFile);
@@ -145,12 +153,18 @@ export default function AddItemModal({ onClose }) {
         }
         const data = await res.json();
         finalUrl = data.url;
+        
+        // Extract content from PDF and append it
+        const extracted = await parseFile(finalUrl, 'pdf');
+        if (extracted) {
+          finalContent = finalContent ? `${finalContent}\n\n--- Extracted from PDF ---\n${extracted}` : extracted;
+        }
       }
 
       await saveItem(user.uid, {
         type,
         title,
-        content,
+        content: finalContent,
         url: finalUrl || undefined,
       });
       onClose();

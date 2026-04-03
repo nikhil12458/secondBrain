@@ -18,7 +18,10 @@ export default function AIActions({ item }) {
       const fullPrompt = `
         Based on the following content titled "${item.title}":
         
-        ${item.content}
+        Content: ${item.content || 'N/A'}
+        Summary: ${item.summary || 'N/A'}
+        Explanation: ${item.explanation || 'N/A'}
+        Type: ${item.type}
         
         ${prompt}
       `;
